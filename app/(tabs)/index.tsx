@@ -1,74 +1,222 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import {
+  Image,
+  StyleSheet,
+  Platform,
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  Pressable,
+} from "react-native";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import { HelloWave } from "@/components/HelloWave";
+import ParallaxScrollView from "@/components/ParallaxScrollView";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { useTheme } from "@react-navigation/native";
+import { useEffect, useState } from "react";
+import { Link, useNavigation } from "expo-router";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import axios from "axios";
+import Header from "@/components/Header copy";
+
+const fakeUsers = [
+  { id: "1", avatar: "https://i.pravatar.cc/300?img=1" },
+  { id: "2", avatar: "https://i.pravatar.cc/300?img=2" },
+  { id: "3", avatar: "https://i.pravatar.cc/300?img=3" },
+];
 
 export default function HomeScreen() {
+  const { colors } = useTheme();
+  const [offres, setOffres] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    const fetchOffres = async () => {
+      try {
+        setIsLoading(true);
+        fetch("http://192.168.1.23:4000/offres")
+          .then((response) => response.json())
+          .then((json) => {
+            setOffres(json);
+            console.log("offressss", offres);
+          });
+      } catch (err) {
+        console.error("Erreur API:", err);
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchOffres();
+  }, []);
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Header showNotificationIcon showAvatar />
+
+      <View style={styles.banner}>
+        <Text style={[styles.bannerText, { color: colors.onBackground }]}>
+          Discover Tunisia's Hidden{" "}
+          <Text style={styles.bannerHighlight}>Treasures!</Text>
+        </Text>
+      </View>
+
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={[styles.sectionTitle, { color: colors.onBackground }]}>
+            Top Destinations
+          </Text>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("all")}
+          >
+            <Text style={[styles.viewAll]}>
+              View all
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <FlatList
+          horizontal
+          data={offres}
+          keyExtractor={(item) => item._id}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.destinationList}
+          renderItem={({ item }) => (
+            <Link href={`/details/${item._id}`} asChild>
+            <TouchableOpacity style={styles.card}>
+
+              <Image
+                source={{ uri: item.photos[0] }}
+                style={styles.cardImage}
+                resizeMode="cover"
+                onError={(error) =>
+                  console.log("Erreur image:", error.nativeEvent)
+                }
+              />
+
+              <View style={styles.cardContent}>
+                <Text
+                  style={[styles.cardTitle, { color: colors.onBackground }]}
+                >
+                  {item.titre}
+                </Text>
+
+                <View style={styles.locationRow}>
+                  <Text
+                    style={[styles.cardLocation, { color: colors.onSurface }]}
+                  >
+                    {item.categorie}
+                  </Text>
+
+                  <View style={styles.avatarsRow}>
+                    {fakeUsers.slice(0, 3).map((user, index) => (
+                      <Image
+                        key={user.id}
+                        source={{ uri: user.avatar }}
+                        style={[
+                          styles.avatar,
+                          { marginLeft: index === 0 ? 0 : -10 },
+                        ]}
+                      />
+                    ))}
+                    {fakeUsers.length > 3 && (
+                      <View style={styles.extraUsers}>
+                        <Text style={styles.extraUsersText}>
+                          +{fakeUsers.length - 3}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              </View>
+            </TouchableOpacity>
+            </Link>
+          )}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: { paddingHorizontal: 4 },
+  loaderContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  errorContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+
+  banner: { marginVertical: 20, paddingHorizontal: 16 },
+  bannerText: { fontSize: 28, fontWeight: "bold", lineHeight: 34 },
+  bannerHighlight: { color: "orange" },
+
+  section: { marginTop: 20 },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    marginBottom: 10,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  sectionTitle: { fontSize: 20, fontWeight: "bold" },
+  viewAll:{
+    color: "orange",
+    fontWeight: "bold",
+    // i want to add bottom border to this text
+    textDecorationLine: "underline",
+
+  }
+,
+  destinationList: { paddingHorizontal: 16, paddingBottom: 20 },
+  card: {
+    width: 280,
+    marginRight: 16,
+    borderRadius: 16,
+    overflow: "hidden",
+    backgroundColor: "#FFF",
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  cardImage: { width: "100%", height: 250 },
+  cardContent: { padding: 12 },
+  cardTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 4 },
+  locationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 8,
+  },
+  avatarsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  avatar: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#FFF",
+  },
+  extraUsers: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "gray",
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: -10,
+  },
+  extraUsersText: {
+    color: "#FFF",
+    fontSize: 12,
+    fontWeight: "bold",
+  },
+  cardLocation: {
+    fontSize: 14,
+    flex: 1,
   },
 });
