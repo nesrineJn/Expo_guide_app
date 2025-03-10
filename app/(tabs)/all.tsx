@@ -30,7 +30,7 @@ const all = () => {
     const fetchOffres = async () => {
       try {
         setIsLoading(true);
-        fetch("http://192.168.1.23:4000/offres")
+        fetch("http://192.168.1.16:4000/offres")
           .then((response) => response.json())
           .then((json) => {
             setOffres(json);
@@ -154,8 +154,8 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   cardImage: {
-    width: 90,
-    height: 100,
+    width: 100,
+    height: 120,
     borderRadius: 10,
   },
   cardContent: {
@@ -168,19 +168,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   title: {
-    fontSize: 16,
-    fontWeight: "bold",
+    fontSize: 14,
+    fontWeight: "600",
     flex: 1,
   },
   priceTag: {
-    backgroundColor: "#FF7043",
+    backgroundColor: "#FF70434D",
     borderRadius: 15,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
+    paddingVertical: 2,
+    paddingHorizontal: 8,
   },
   priceText: {
-    color: "white",
-    fontWeight: "bold",
+    color: "#FF7043",
+    // fontWeight: "bold",
   },
   infoRow: {
     flexDirection: "row",

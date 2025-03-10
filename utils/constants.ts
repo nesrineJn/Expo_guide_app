@@ -96,3 +96,5 @@ export const WEEK_DAYS_VALUES = [
   { value: 'Ven.', selected: true },
   { value: 'Sam.', selected: true },
 ];
+
+export const primaryColor = 'bg-orange-500';

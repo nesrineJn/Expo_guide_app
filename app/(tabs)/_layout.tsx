@@ -15,13 +15,12 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "orange",
+        tabBarActiveTintColor: "#f97316",
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
         tabBarStyle: Platform.select({
           ios: {
-            // Use a transparent background on iOS to show the blur effect
             position: "absolute",
           },
           default: {},
@@ -46,12 +45,21 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
+      {/* <Tabs.Screen
         name="explore"
         options={{
           title: "Favories ",
           tabBarIcon: ({ color }) => (
             <MaterialIcons size={28} name="favorite" color={color} />
+          ),
+        }}
+      /> */}
+      <Tabs.Screen
+        name="touristEvents"
+        options={{
+          title: "calendar",
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons size={20} name="calendar-today" color={color} />
           ),
         }}
       />

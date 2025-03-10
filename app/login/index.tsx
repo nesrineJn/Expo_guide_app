@@ -15,7 +15,10 @@ import { Button, Text } from "react-native-paper";
 import colors from "tailwindcss/colors";
 import Image from "@/components/display/Image";
 import * as SecureStore from "expo-secure-store";
-import { Link } from "expo-router";
+import { Link, Stack } from "expo-router";
+import { router } from "expo-router"; 
+
+
 
 export type LoginForm = {
   email: string;
@@ -32,9 +35,9 @@ const LoginScreen = ({ navigation }: any) => {
 
   const handleLogin = async (data: any) => {
     startLoading();
-    const { email, password } = data;
+    const { email, password,_id } = data;
 
-    fetch("http://192.168.1.23:4000/auth/signin", {
+    fetch("http://192.168.1.16:4000/auth/signin", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -54,14 +57,17 @@ const LoginScreen = ({ navigation }: any) => {
         console.log(json, "json");
         await SecureStore.setItemAsync("token", json.access_token);
         await SecureStore.setItemAsync("email", email);
+         await SecureStore.setItemAsync("currentUser",json._id)
+         console.log(await SecureStore.getItemAsync("token"))
         const storedToken = await SecureStore.getItemAsync("token");
         console.log(storedToken, "storedToken");
         stopLoading();
+        router.replace('/(tabs)')
       })
       .catch((error) => {
         console.log(error, "erreur");
         stopLoading();
-        Alert.alert("error", "Password or email incorrect. Please try again.");
+        
       });
   };
 
@@ -79,14 +85,18 @@ const LoginScreen = ({ navigation }: any) => {
 
   return (
     <Screen>
+      <Stack.Screen options={{ headerShown: false }} />
       <View style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollViewContent}>
           {/* Logo */}
+  
+          {/* <Text style={styles.title}>Login</Text> */}
           <Image
             source={require("../../assets/images/logoguide.png")}
             style={styles.logo}
           />
 
+        <Text style={styles.subtitle}>Welcome back! Please log in to continue.</Text>
           {/* Email Input */}
           <Controller
             control={control}
@@ -111,9 +121,9 @@ const LoginScreen = ({ navigation }: any) => {
             name="email"
           />
           {errors.email && (
-            <Typography.Paragraph style={styles.errorText}>
+            <Text style={styles.errorText}>
               {errors.email.message}
-            </Typography.Paragraph>
+            </Text>
           )}
 
           {/* Password Input */}
@@ -140,9 +150,9 @@ const LoginScreen = ({ navigation }: any) => {
             name="password"
           />
           {errors.password && (
-            <Typography.Paragraph style={styles.errorText}>
+            <Text style={styles.errorText}>
               {errors.password.message}
-            </Typography.Paragraph>
+            </Text>
           )}
 
           {/* Forgot Password Link */}
@@ -171,14 +181,6 @@ const LoginScreen = ({ navigation }: any) => {
             <View style={styles.dividerLine} />
           </View>
 
-          {/* Google Sign In Button */}
-          <TouchableOpacity
-            onPress={handleGoogleLogin}
-            disabled={isLoading}
-            style={styles.googleButton}
-          >
-            <Text style={styles.googleButtonText}>Sign in with Google</Text>
-          </TouchableOpacity>
 
           {/* Sign Up Link */}
           <View style={styles.signUpContainer}>
@@ -197,24 +199,36 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: colors.white,
+   
   },
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 5,
+    color: colors.gray[900], // Couleur sombre pour le contraste
+  },
+  subtitle: {
+    fontSize: 16,
+    textAlign: "center",
+    color: colors.gray[600], // Couleur plus douce pour l'effet pro
+    marginBottom: 25,
+  },
+  
   scrollViewContent: {
     flexGrow: 1,
     justifyContent: "center",
   },
   logo: {
-    width: 150,
-    height: 150,
+    width: '50%',
+    height: '35%',
     alignSelf: "center",
-    marginBottom: 30,
+
   },
   input: {
     marginBottom: 20,
-    backgroundColor: colors.gray[100],
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: colors.gray[200],
+    backgroundColor:colors.white,
+    borderColor: colors.white[200],
   },
   errorText: {
     color: colors.red[500],
@@ -230,9 +244,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   signInButton: {
-    backgroundColor: colors.blue[500],
+    backgroundColor: colors.orange[500],
     borderRadius: 10,
-    paddingVertical: 10,
+    paddingVertical: 6,
     marginBottom: 20,
   },
   signInButtonText: {

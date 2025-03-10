@@ -37,7 +37,7 @@ export default function HomeScreen() {
     const fetchOffres = async () => {
       try {
         setIsLoading(true);
-        fetch("http://192.168.1.23:4000/offres")
+        fetch("http://192.168.1.16:4000/offres")
           .then((response) => response.json())
           .then((json) => {
             setOffres(json);
@@ -56,7 +56,7 @@ export default function HomeScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Header showNotificationIcon showAvatar />
+      <Header showNotificationIcon showAvatar showLoginButton />
 
       <View style={styles.banner}>
         <Text style={[styles.bannerText, { color: colors.onBackground }]}>
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
 
   banner: { marginVertical: 20, paddingHorizontal: 16 },
   bannerText: { fontSize: 28, fontWeight: "bold", lineHeight: 34 },
-  bannerHighlight: { color: "orange" },
+  bannerHighlight: { color: "#f97316" },
 
   section: { marginTop: 20 },
   sectionHeader: {
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { fontSize: 20, fontWeight: "bold" },
   viewAll:{
-    color: "orange",
+    color: "#f97316",
     fontWeight: "bold",
     // i want to add bottom border to this text
     textDecorationLine: "underline",

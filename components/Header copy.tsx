@@ -1,39 +1,52 @@
 import { useNavigation, useTheme } from "@react-navigation/native";
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { StyleSheet, TouchableOpacity, View, Text } from "react-native";
 import { Appbar } from "react-native-paper";
 import Avatar from "./display/Avatar";
 import { scale } from "react-native-size-matters";
 import { Link } from "expo-router";
+import * as SecureStore from "expo-secure-store";
 
 export interface HeaderProps {
   showBackButton?: boolean;
   showAvatar?: boolean;
   showNotificationIcon?: boolean;
+  showLoginButton?: boolean; // ✅ Nouvelle prop pour afficher ou non le bouton Login
   onBackActionPressed?: () => void;
   onAvatarPressed?: () => void;
   onNotificationPressed?: () => void;
-  title?: string; // ✅ Ajout de la prop pour le titre
+  title?: string;
 }
 
 const Header: React.FC<HeaderProps> = ({
   showBackButton = false,
   showAvatar = false,
   showNotificationIcon = false,
+  showLoginButton = false, // ✅ Par défaut, il ne s'affiche pas
   onBackActionPressed,
   onAvatarPressed,
   onNotificationPressed,
-  title = "", // ✅ Titre par défaut vide
+  title = "",
 }) => {
   const { colors } = useTheme();
   const navigation = useNavigation();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userAvatar, setUserAvatar] = useState("");
 
-  // Données fictives pour l'utilisateur
-  const fakeUser = {
-    _id: "1",
-    avatar: "https://i.pravatar.cc/300", // URL d'un avatar fictif
-    fullName: "John Doe",
-  };
+  // Vérifier si l'utilisateur est connecté
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      const token = await SecureStore.getItemAsync("token");
+      const avatar = await SecureStore.getItemAsync("avatar");
+      if (token) {
+        setIsLoggedIn(true);
+        setUserAvatar(avatar || "https://i.pravatar.cc/300");
+      } else {
+        setIsLoggedIn(false);
+      }
+    };
+    checkLoginStatus();
+  }, []);
 
   const onBackActionClicked = useCallback(
     () =>
@@ -47,7 +60,7 @@ const Header: React.FC<HeaderProps> = ({
     <Appbar.Header
       style={[styles.header, { backgroundColor: colors.background }]}
     >
-      {/* ✅ Bouton de retour à gauche */}
+      {/* ✅ Bouton de retour */}
       {showBackButton && (
         <TouchableOpacity
           onPress={onBackActionClicked}
@@ -61,6 +74,15 @@ const Header: React.FC<HeaderProps> = ({
         </TouchableOpacity>
       )}
 
+      {/* ✅ Bouton Login à gauche, mais seulement si showLoginButton est vrai */}
+      {!isLoggedIn && showLoginButton && (
+        <TouchableOpacity style={styles.loginButton}>
+          <Link href={`/login`} asChild>
+            <Text style={styles.loginText}>Login</Text>
+          </Link>
+        </TouchableOpacity>
+      )}
+
       {/* ✅ Titre centré */}
       <View style={styles.titleContainer}>
         <Text
@@ -71,7 +93,7 @@ const Header: React.FC<HeaderProps> = ({
         </Text>
       </View>
 
-      {/* ✅ Avatar et icône de notification à droite */}
+      {/* ✅ Icône de notification et avatar à droite */}
       <View style={styles.rightContainer}>
         {showNotificationIcon && (
           <TouchableOpacity
@@ -85,17 +107,12 @@ const Header: React.FC<HeaderProps> = ({
             />
           </TouchableOpacity>
         )}
-        {/* {showAvatar && (
+
+        {isLoggedIn && showAvatar && (
           <TouchableOpacity onPress={onAvatarPressed} style={styles.iconButton}>
-            <Avatar user={fakeUser.avatar} size={30} />
+            <Avatar user={userAvatar} size={30} />
           </TouchableOpacity>
-        )} */}
-        *
-        <TouchableOpacity onPress={() => {}}>
-          <Link href={`/login`} asChild>
-            <Text style={{ color: colors.onSurface }}>Login</Text>
-          </Link>
-        </TouchableOpacity>
+        )}
       </View>
     </Appbar.Header>
   );
@@ -112,10 +129,22 @@ const styles = StyleSheet.create({
   backButton: {
     right: 25,
   },
+  loginButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    backgroundColor: "#f97316",
+    borderRadius: 20,
+    marginLeft: 10,
+  },
+  loginText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 14,
+  },
   titleContainer: {
     flex: 1,
     alignItems: "flex-start",
-    justifyContent: "flex-start",
+    justifyContent: "center",
   },
   title: {
     fontSize: 18,

@@ -1,8 +1,6 @@
 import React from 'react';
-import { TextInput, TextInputProps } from 'react-native-paper';
+import { TextInput, TextInputProps, useTheme } from 'react-native-paper';
 
-
-import { useTheme } from '../hooks/useTheme'
 
 interface Props extends Omit<TextInputProps, 'right'> {
   invalid?: boolean;
@@ -22,11 +20,9 @@ const Input = React.forwardRef(
         maxFontSizeMultiplier={1}
         error={invalid || otherProps.error}
         outlineStyle={{ borderRadius: roundness * 4 }}
-        // activeOutlineColor={colors.primary}
-        outlineColor={colors.outlineVariant}
-        // textColor={colors.onBackground}
-        placeholderTextColor={colors.outlineVariant}
-        
+        activeOutlineColor={"#FFA500"} // Couleur orange si `colors.primary` est indisponible
+        outlineColor={colors.backdrop || "#FFA500"}
+        placeholderTextColor={colors.outlineVariant || "#AAAAAA"}
         right={
           typeof right === 'string' ? (
             <TextInput.Icon onPress={otherProps.onRightPress} icon={right} />
@@ -39,4 +35,8 @@ const Input = React.forwardRef(
     );
   },
 );
+
 export default Input;
+
+
+
