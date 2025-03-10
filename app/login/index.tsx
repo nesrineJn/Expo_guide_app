@@ -37,7 +37,7 @@ const LoginScreen = ({ navigation }: any) => {
     startLoading();
     const { email, password,_id } = data;
 
-    fetch("http://192.168.1.16:4000/auth/signin", {
+    fetch("http://172.16.19.203:4000/auth/signin", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

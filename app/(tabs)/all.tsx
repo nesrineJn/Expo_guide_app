@@ -30,7 +30,7 @@ const all = () => {
     const fetchOffres = async () => {
       try {
         setIsLoading(true);
-        fetch("http://192.168.1.16:4000/offres")
+        fetch("http://172.16.19.203:4000/offres")
           .then((response) => response.json())
           .then((json) => {
             setOffres(json);

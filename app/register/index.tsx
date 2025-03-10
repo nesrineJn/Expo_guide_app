@@ -41,7 +41,7 @@ const RegisterScreen = ({ navigation }: any) => {
     const { email, password, fullName, phoneNumber } = data;
     console.log(email,password,fullName,phoneNumber)
 
-    fetch("http://192.168.1.16:4000/auth/register", {
+    fetch("http://172.16.19.203:4000/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: email, password: password, fullName: fullName, phoneNumber: phoneNumber, role: "TOURISTE" }),

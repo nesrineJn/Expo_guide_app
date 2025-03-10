@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, FlatList, ActivityIndicator } from "react-native";
+import { View, FlatList, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import { Text } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
@@ -21,56 +21,61 @@ const TouristEvents = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filteredDates, setFilteredDates] = useState<string[]>([]);
-  const [refreshing, setRefreshing] = useState(false);
+  const [refreshing, setRefreshing] = useState(false); // ✅ Ajout de l'état pour le refresh
+
+  const fetchUserAndEvents = async (isRefresh = false) => {
+    try {
+      if (!isRefresh) setLoading(true);
+
+      const idUser = await SecureStore.getItemAsync("currentUser");
+      if (!idUser) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+      setUser(idUser);
+
+      const formattedDates = filteredDates.map(date => 
+        dayjs.utc(date).startOf("day").format("YYYY-MM-DDTHH:mm:ss.SSS[Z]")
+      );
+
+      const requestBody = formattedDates.length > 0 ? { dates: formattedDates } : {};
+
+      const response = await fetch(
+        `http://172.16.19.203:4000/reservations/byTouriste/${idUser}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestBody),
+        }
+      );
+
+      if (!response.ok) throw new Error("Error while loading events");
+
+      const data = await response.json();
+      setEvents(data);
+    } catch (err) {
+      console.error("API Error:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false); // ✅ Arrête le rafraîchissement après le chargement
+    }
+  };
 
   useEffect(() => {
-    const fetchUserAndEvents = async (isRefresh = false) => {
-      try {
-        if (!isRefresh) setLoading(true); // ✅ Afficher le loading uniquement si ce n'est pas un refresh
-    
-        const idUser = await SecureStore.getItemAsync("currentUser");
-        if (!idUser) {
-          setUser(null);
-          setLoading(false);
-          return;
-        }
-        setUser(idUser);
-    
-        const formattedDates = filteredDates.map(date => 
-          dayjs.utc(date).startOf("day").format("YYYY-MM-DDTHH:mm:ss.SSS[Z]")
-        );
-    
-        const requestBody = formattedDates.length > 0 ? { dates: formattedDates } : {};
-    
-        const response = await fetch(
-          `http://192.168.1.16:4000/reservations/byTouriste/${idUser}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(requestBody),
-          }
-        );
-    
-        if (!response.ok) throw new Error("Erreur lors du chargement des événements");
-    
-        const data = await response.json();
-        setEvents(data);
-      } catch (err) {
-        console.error("Erreur API:", err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-        setRefreshing(false); // ✅ Stop le refresh
-      }
-    };
-    
     fetchUserAndEvents();
-  }, [filteredDates]); 
-  
+  }, [filteredDates]);
+
+  // ✅ Fonction pour gérer le pull-to-refresh
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchUserAndEvents(true); // Recharge les données avec l'état isRefresh
+  };
 
   return (
     <View style={tw`flex-1`}>
-      <Header showNotificationIcon showAvatar showLoginButton />
+      <Header showNotificationIcon showAvatar showLoginButton grandTitle="Tourist Reservations"/>
       <MiniCalendar onSelectDates={setFilteredDates} /> 
 
       {loading ? (
@@ -84,6 +89,9 @@ const TouristEvents = () => {
             data={events}
             keyExtractor={(item) => item._id.toString()}
             renderItem={({ item }) => <EventCard item={item} navigation={navigation} />}
+            refreshControl={ // ✅ Ajout du pull-to-refresh
+              <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+            }
           />
         ) : (
           <View style={tw`items-center justify-center flex-1`}>

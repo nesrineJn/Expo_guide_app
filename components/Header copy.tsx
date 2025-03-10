@@ -11,29 +11,30 @@ export interface HeaderProps {
   showBackButton?: boolean;
   showAvatar?: boolean;
   showNotificationIcon?: boolean;
-  showLoginButton?: boolean; // ✅ Nouvelle prop pour afficher ou non le bouton Login
+  showLoginButton?: boolean; 
   onBackActionPressed?: () => void;
   onAvatarPressed?: () => void;
   onNotificationPressed?: () => void;
   title?: string;
+  grandTitle?: string; // ✅ Nouveau grand titre optionnel
 }
 
 const Header: React.FC<HeaderProps> = ({
   showBackButton = false,
   showAvatar = false,
   showNotificationIcon = false,
-  showLoginButton = false, // ✅ Par défaut, il ne s'affiche pas
+  showLoginButton = false,
   onBackActionPressed,
   onAvatarPressed,
   onNotificationPressed,
   title = "",
+  grandTitle = "", 
 }) => {
   const { colors } = useTheme();
   const navigation = useNavigation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userAvatar, setUserAvatar] = useState("");
 
-  // Vérifier si l'utilisateur est connecté
   useEffect(() => {
     const checkLoginStatus = async () => {
       const token = await SecureStore.getItemAsync("token");
@@ -60,12 +61,16 @@ const Header: React.FC<HeaderProps> = ({
     <Appbar.Header
       style={[styles.header, { backgroundColor: colors.background }]}
     >
+      {/* ✅ Avatar à gauche si connecté */}
+      {isLoggedIn && showAvatar && (
+        <TouchableOpacity onPress={onAvatarPressed} style={styles.avatarButton}>
+          <Avatar user={userAvatar} size={30} />
+        </TouchableOpacity>
+      )}
+
       {/* ✅ Bouton de retour */}
       {showBackButton && (
-        <TouchableOpacity
-          onPress={onBackActionClicked}
-          style={styles.backButton}
-        >
+        <TouchableOpacity onPress={onBackActionClicked} style={styles.backButton}>
           <Appbar.Action
             icon="arrow-left"
             size={scale(25)}
@@ -74,7 +79,7 @@ const Header: React.FC<HeaderProps> = ({
         </TouchableOpacity>
       )}
 
-      {/* ✅ Bouton Login à gauche, mais seulement si showLoginButton est vrai */}
+      {/* ✅ Bouton Login (si non connecté) */}
       {!isLoggedIn && showLoginButton && (
         <TouchableOpacity style={styles.loginButton}>
           <Link href={`/login`} asChild>
@@ -85,35 +90,27 @@ const Header: React.FC<HeaderProps> = ({
 
       {/* ✅ Titre centré */}
       <View style={styles.titleContainer}>
-        <Text
-          style={[styles.title, { color: colors.onSurface }]}
-          numberOfLines={1}
-        >
-          {title}
-        </Text>
-      </View>
-
-      {/* ✅ Icône de notification et avatar à droite */}
-      <View style={styles.rightContainer}>
-        {showNotificationIcon && (
-          <TouchableOpacity
-            onPress={onNotificationPressed}
-            style={styles.iconButton}
-          >
-            <Appbar.Action
-              icon="bell-outline"
-              size={scale(25)}
-              color={colors.onSurface}
-            />
-          </TouchableOpacity>
-        )}
-
-        {isLoggedIn && showAvatar && (
-          <TouchableOpacity onPress={onAvatarPressed} style={styles.iconButton}>
-            <Avatar user={userAvatar} size={30} />
-          </TouchableOpacity>
+        {grandTitle ? (
+          <Text style={[styles.grandTitle, { color: colors.onSurface }]}>
+            {grandTitle}
+          </Text>
+        ) : (
+          <Text style={[styles.title, { color: colors.onSurface }]}>
+            {title}
+          </Text>
         )}
       </View>
+
+      {/* ✅ Icône de notification à droite */}
+      {showNotificationIcon && (
+        <TouchableOpacity onPress={onNotificationPressed} style={styles.iconButton}>
+          <Appbar.Action
+            icon="bell-outline"
+            size={scale(25)}
+            color={colors.onSurface}
+          />
+        </TouchableOpacity>
+      )}
     </Appbar.Header>
   );
 };
@@ -126,8 +123,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 10,
   },
+  avatarButton: {
+    marginRight: 10, // ✅ Avatar bien placé à gauche
+  },
   backButton: {
-    right: 25,
+    right: 10,
   },
   loginButton: {
     paddingVertical: 6,
@@ -143,16 +143,16 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     flex: 1,
-    alignItems: "flex-start",
+    alignItems: "center",
     justifyContent: "center",
   },
   title: {
     fontSize: 18,
     fontWeight: "bold",
   },
-  rightContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+  grandTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
   },
   iconButton: {
     marginLeft: 10,

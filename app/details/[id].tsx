@@ -12,7 +12,7 @@ import React, { useEffect, useState } from "react";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router, useNavigation } from "expo-router";
 import { useRoute } from "@react-navigation/native";
-import { Modal, Portal, Button, useTheme } from "react-native-paper";
+import { Modal, Portal, Button, useTheme, ActivityIndicator } from "react-native-paper";
 import { Colors } from "react-native/Libraries/NewAppScreen";
 import * as SecureStore from "expo-secure-store";
 
@@ -29,16 +29,22 @@ const Details = () => {
   const [reservationType, setReservationType] = useState("personal");
   const [numPlaces, setNumPlaces] = useState("");
   const [token, setToken] = useState(null);
-  const [reservation, setReservation] = useState(null);
+  interface Reservation {
+    _id: string;
+    numberOfPersons: number;
+    status: string;
+  }
+  
+  const [reservation, setReservation] = useState<Reservation | null>(null);
   useEffect(() => {
     navigation.setOptions({ title: "Détails de l'offre" });
 
     const fetchOfferDetails = async () => {
       const tokenn = await SecureStore.getItemAsync("token");
-      setToken(tokenn);
+      setToken(token);
       try {
         setIsLoading(true);
-        fetch(`http://192.168.1.16:4000/offres/${id}`)
+        fetch(`http://172.16.19.203:4000/offres/${id}`)
           .then((response) => {
             if (!response.ok) {
               throw new Error("Erreur lors du chargement des détails.");
@@ -61,7 +67,7 @@ const Details = () => {
 
       try {
         const response = await fetch(
-          "http://192.168.1.16:4000/reservations/getByOfferAndTouristId",
+          "http://172.16.19.203:4000/reservations/getByOfferAndTouristId",
           {
             method: "POST",
             headers: {
@@ -83,6 +89,7 @@ const Details = () => {
           }
         }
       } catch (error) {
+        Alert.alert("Error", "Invalid number of seats. Please enter a valid number.");
         console.error(
           "Erreur lors de la récupération de la réservation:",
           error
@@ -100,11 +107,21 @@ const Details = () => {
   };
 
   const closeModal = async () => {
+    // Si c'est une réservation personnelle, on force numPlaces à 1
+    const placesToSend = reservationType === "personal" ? 1 : Number(numPlaces);
+  
+    if (!placesToSend || isNaN(placesToSend) || placesToSend <= 0) {
+      alert("Please enter a valid number of places.");
+      return;
+    }
+  
     setIsModalVisible(false);
     const idUser = await SecureStore.getItemAsync("currentUser");
-    console.log("idusehhhhhhr", idUser);
-    console.log("id", id),
-      fetch("http://192.168.1.16:4000/reservations", {
+  
+    console.log("Sending data:", { touristId: idUser, offerId: id, numberOfPersons: placesToSend });
+  
+    try {
+      const response = await fetch("http://172.16.19.203:4000/reservations", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -112,30 +129,43 @@ const Details = () => {
         body: JSON.stringify({
           touristId: idUser,
           offerId: id,
-          numberOfPersons: numPlaces,
-          status: "panding",
+          numberOfPersons: placesToSend,
         }),
-      })
-        .then((response) => {
-          console.log(response);
-          if (!response.ok) {
-            throw new Error("Password or email incorrect");
-          }
-          return response.json();
-        })
-        .then(async (json) => {})
-        .catch((error) => {});
+      });
+  
+      const responseText = await response.text(); 
+      console.log("Raw server response:", responseText);
+  
+      if (!response.ok) {
+        console.error("Server Error:", response.status, response.statusText);
+        Alert.alert("Error", "Invalid number of seats. Please enter a valid number.");
+        throw new Error("Error creating reservation.");
+      }
+  
+      const json = JSON.parse(responseText); 
+      console.log("Server response:", json);
+  
+      setReservation(json); 
+    } catch (error) {
+      console.error("Error:", error);
+    }
   };
-
+  
+  useEffect(() => {
+    if (reservationType === "personal") {
+      setNumPlaces("1");
+    } else if (reservationType === "group" && (!numPlaces || numPlaces === "1")) {
+      setNumPlaces(""); // On vide l'input pour laisser l'utilisateur entrer un nombre
+    }
+  }, [reservationType]);
+    
   const handleUpdateReservation = () => {
     if (!reservation) return;
 
-    // ✅ Détermine si la réservation est en groupe ou personnelle
     const isGroup = reservation.numberOfPersons > 1;
 
     setReservationType(isGroup ? "group" : "personal");
-    setNumPlaces(isGroup ? String(reservation.numberOfPersons) : ""); // Remplit le champ si groupe
-
+    setNumPlaces(isGroup ? String(reservation.numberOfPersons) : ""); 
     setIsModalVisible(true);
   };
 
@@ -143,7 +173,7 @@ const Details = () => {
     if (!reservation) return;
     
     try {
-      const response = await fetch(`http://192.168.1.16:4000/reservations/${reservation._id}`, {
+      const response = await fetch(`http://172.16.19.203:4000/reservations/${reservation._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ numberOfPersons: numPlaces }),
@@ -173,7 +203,7 @@ const Details = () => {
           onPress: async () => {
             try {
               const response = await fetch(
-                `http://192.168.1.16:4000/reservations/${reservation._id}`,
+                `http://172.16.19.203:4000/reservations/${reservation._id}`,
                 {
                   method: "DELETE",
                   headers: { "Content-Type": "application/json" },
@@ -196,10 +226,11 @@ const Details = () => {
   if (isError || !offer) {
     return (
       <View style={styles.errorContainer}>
-        <Text>Erreur lors du chargement des détails de l'offre.</Text>
+        <ActivityIndicator size="large" color="#f97316" />
       </View>
     );
   }
+  
 
   return (
     <>
