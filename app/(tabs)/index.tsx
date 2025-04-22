@@ -28,7 +28,14 @@ const fakeUsers = [
 
 export default function HomeScreen() {
   const { colors } = useTheme();
-  const [offres, setOffres] = useState([]);
+  interface Offre {
+    _id: string;
+    photos: string[];
+    titre: string;
+    categorie: string;
+  }
+
+  const [offres, setOffres] = useState<Offre[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
   const navigation = useNavigation();
@@ -59,7 +66,7 @@ export default function HomeScreen() {
       <Header showNotificationIcon showAvatar showLoginButton />
 
       <View style={styles.banner}>
-        <Text style={[styles.bannerText, { color: colors.onBackground }]}>
+        <Text style={[styles.bannerText]}>
           Discover Tunisia's Hidden{" "}
           <Text style={styles.bannerHighlight}>Treasures!</Text>
         </Text>
@@ -67,10 +74,11 @@ export default function HomeScreen() {
 
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.onBackground }]}>
+          <Text style={[styles.sectionTitle]}>
             Top Destinations
           </Text>
           <TouchableOpacity
+          //@ts-expect-error
             onPress={() => navigation.navigate("all")}
           >
             <Text style={[styles.viewAll]}>
@@ -100,14 +108,14 @@ export default function HomeScreen() {
 
               <View style={styles.cardContent}>
                 <Text
-                  style={[styles.cardTitle, { color: colors.onBackground }]}
+                  style={[styles.cardTitle]}
                 >
                   {item.titre}
                 </Text>
 
                 <View style={styles.locationRow}>
                   <Text
-                    style={[styles.cardLocation, { color: colors.onSurface }]}
+                    style={[styles.cardLocation]}
                   >
                     {item.categorie}
                   </Text>
@@ -163,7 +171,6 @@ const styles = StyleSheet.create({
   viewAll:{
     color: "#f97316",
     fontWeight: "bold",
-    // i want to add bottom border to this text
     textDecorationLine: "underline",
 
   }

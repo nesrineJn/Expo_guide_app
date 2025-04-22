@@ -21,7 +21,16 @@ const fakeUsers = [
 
 const all = () => {
   const { colors } = useTheme();
-  const [offres, setOffres] = useState([]);
+  interface Offre {
+    _id: string;
+    photos: string[];
+    titre: string;
+    prix: number;
+    startDate: string;
+    endDate: string;
+  }
+
+  const [offres, setOffres] = useState<Offre[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
   const navigation = useNavigation();

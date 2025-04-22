@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { View, FlatList, ActivityIndicator, Alert, RefreshControl } from "react-native";
+import {
+  View,
+  FlatList,
+  ActivityIndicator,
+  Alert,
+  RefreshControl,
+} from "react-native";
 import { Text } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
@@ -10,18 +16,32 @@ import MiniCalendar from "@/components/calenderHeader";
 import EventCard from "@/components/eventCard";
 import tw from "@/utils/tailwind copy";
 import Header from "@/components/Header copy";
-import utc from "dayjs/plugin/utc"; 
+import utc from "dayjs/plugin/utc";
 
 dayjs.extend(utc);
 
 const TouristEvents = () => {
   const navigation = useNavigation();
   const [user, setUser] = useState<string | null>(null);
-  const [events, setEvents] = useState([]);
+  interface Event {
+    _id: string;
+    status: string;
+    numberOfPersons: number;
+    createdAt: string;
+    offerId: {
+      _id: string;
+      titre: string;
+      startDate: string;
+      location?: string;
+      photos?: string[];
+    };
+  }
+
+  const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filteredDates, setFilteredDates] = useState<string[]>([]);
-  const [refreshing, setRefreshing] = useState(false); // ✅ Ajout de l'état pour le refresh
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchUserAndEvents = async (isRefresh = false) => {
     try {
@@ -35,11 +55,12 @@ const TouristEvents = () => {
       }
       setUser(idUser);
 
-      const formattedDates = filteredDates.map(date => 
+      const formattedDates = filteredDates.map((date) =>
         dayjs.utc(date).startOf("day").format("YYYY-MM-DDTHH:mm:ss.SSS[Z]")
       );
 
-      const requestBody = formattedDates.length > 0 ? { dates: formattedDates } : {};
+      const requestBody =
+        formattedDates.length > 0 ? { dates: formattedDates } : {};
 
       const response = await fetch(
         `http://172.16.19.203:4000/reservations/byTouriste/${idUser}`,
@@ -56,10 +77,11 @@ const TouristEvents = () => {
       setEvents(data);
     } catch (err) {
       console.error("API Error:", err);
+      //@ts-expect-error
       setError(err.message);
     } finally {
       setLoading(false);
-      setRefreshing(false); // ✅ Arrête le rafraîchissement après le chargement
+      setRefreshing(false);
     }
   };
 
@@ -67,16 +89,20 @@ const TouristEvents = () => {
     fetchUserAndEvents();
   }, [filteredDates]);
 
-  // ✅ Fonction pour gérer le pull-to-refresh
   const handleRefresh = async () => {
     setRefreshing(true);
-    await fetchUserAndEvents(true); // Recharge les données avec l'état isRefresh
+    await fetchUserAndEvents(true);
   };
 
   return (
     <View style={tw`flex-1`}>
-      <Header showNotificationIcon showAvatar showLoginButton grandTitle="Tourist Reservations"/>
-      <MiniCalendar onSelectDates={setFilteredDates} /> 
+      <Header
+        showNotificationIcon
+        showAvatar
+        showLoginButton
+        grandTitle="Tourist Reservations"
+      />
+      <MiniCalendar onSelectDates={setFilteredDates} />
 
       {loading ? (
         <View style={tw`items-center justify-center flex-1`}>
@@ -88,9 +114,16 @@ const TouristEvents = () => {
           <FlatList
             data={events}
             keyExtractor={(item) => item._id.toString()}
-            renderItem={({ item }) => <EventCard item={item} navigation={navigation} />}
-            refreshControl={ // ✅ Ajout du pull-to-refresh
-              <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+           
+            renderItem={({ item }) => (
+               //@ts-expect-error
+              <EventCard item={item} navigation={navigation} />
+            )}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+              />
             }
           />
         ) : (

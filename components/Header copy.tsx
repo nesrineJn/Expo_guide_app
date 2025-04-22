@@ -11,12 +11,12 @@ export interface HeaderProps {
   showBackButton?: boolean;
   showAvatar?: boolean;
   showNotificationIcon?: boolean;
-  showLoginButton?: boolean; 
+  showLoginButton?: boolean;
   onBackActionPressed?: () => void;
   onAvatarPressed?: () => void;
   onNotificationPressed?: () => void;
   title?: string;
-  grandTitle?: string; // ✅ Nouveau grand titre optionnel
+  grandTitle?: string;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -28,7 +28,7 @@ const Header: React.FC<HeaderProps> = ({
   onAvatarPressed,
   onNotificationPressed,
   title = "",
-  grandTitle = "", 
+  grandTitle = "",
 }) => {
   const { colors } = useTheme();
   const navigation = useNavigation();
@@ -61,25 +61,26 @@ const Header: React.FC<HeaderProps> = ({
     <Appbar.Header
       style={[styles.header, { backgroundColor: colors.background }]}
     >
-      {/* ✅ Avatar à gauche si connecté */}
       {isLoggedIn && showAvatar && (
         <TouchableOpacity onPress={onAvatarPressed} style={styles.avatarButton}>
+          {/* @ts-expect-error */}
           <Avatar user={userAvatar} size={30} />
         </TouchableOpacity>
       )}
 
-      {/* ✅ Bouton de retour */}
       {showBackButton && (
-        <TouchableOpacity onPress={onBackActionClicked} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={onBackActionClicked}
+          style={styles.backButton}
+        >
           <Appbar.Action
             icon="arrow-left"
             size={scale(25)}
-            color={colors.onSurface}
+            // color={colors.onSurface}
           />
         </TouchableOpacity>
       )}
 
-      {/* ✅ Bouton Login (si non connecté) */}
       {!isLoggedIn && showLoginButton && (
         <TouchableOpacity style={styles.loginButton}>
           <Link href={`/login`} asChild>
@@ -88,27 +89,20 @@ const Header: React.FC<HeaderProps> = ({
         </TouchableOpacity>
       )}
 
-      {/* ✅ Titre centré */}
       <View style={styles.titleContainer}>
         {grandTitle ? (
-          <Text style={[styles.grandTitle, { color: colors.onSurface }]}>
-            {grandTitle}
-          </Text>
+          <Text style={[styles.grandTitle]}>{grandTitle}</Text>
         ) : (
-          <Text style={[styles.title, { color: colors.onSurface }]}>
-            {title}
-          </Text>
+          <Text style={[styles.title]}>{title}</Text>
         )}
       </View>
 
-      {/* ✅ Icône de notification à droite */}
       {showNotificationIcon && (
-        <TouchableOpacity onPress={onNotificationPressed} style={styles.iconButton}>
-          <Appbar.Action
-            icon="bell-outline"
-            size={scale(25)}
-            color={colors.onSurface}
-          />
+        <TouchableOpacity
+          onPress={onNotificationPressed}
+          style={styles.iconButton}
+        >
+          <Appbar.Action icon="bell-outline" size={scale(25)} />
         </TouchableOpacity>
       )}
     </Appbar.Header>
@@ -124,7 +118,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   avatarButton: {
-    marginRight: 10, // ✅ Avatar bien placé à gauche
+    marginRight: 10,
   },
   backButton: {
     right: 10,
