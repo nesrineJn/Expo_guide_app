@@ -40,6 +40,7 @@ export default function RootLayout() {
         <Stack.Screen name="+not-found" />
         <Stack.Screen name="login.index" options={{ title: "Login" }} />
         <Stack.Screen name="register" options={{ title: "Register" }} />
+        <Stack.Screen name="GuideProfileScreen" options={{ title: "/guide-profile" }} />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>

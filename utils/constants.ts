@@ -1,18 +1,17 @@
 import { Dimensions, Platform, StatusBar } from 'react-native';
-import DeviceInfo from 'react-native-device-info';
-import { userHelper } from '.';
+
 import { NativeStackNavigationOptions } from '@react-navigation/native-stack';
-import { StackNavigationOptions } from '@react-navigation/stack';
+
 import { BottomTabNavigationOptions } from '@react-navigation/bottom-tabs';
 
-export const APP_VERSION = DeviceInfo.getVersion();
-export const APP_BUNDLE_ID = DeviceInfo.getBundleId();
+// export const APP_VERSION = DeviceInfo.getVersion();
+// export const APP_BUNDLE_ID = DeviceInfo.getBundleId();
 
-export let USER_AGENT: undefined | string = undefined;
+// export let USER_AGENT: undefined | string = undefined;
 
-DeviceInfo.getUserAgent().then((value) => {
-  USER_AGENT = value;
-});
+// DeviceInfo.getUserAgent().then((value) => {
+//   USER_AGENT = value;
+// });
 
 type AppConfig = {
   SOCKET_URL: string;
@@ -73,7 +72,7 @@ export const SIZES = {
 };
 
 export const DEFAULT_NAVIGATION_OPTIONS: NativeStackNavigationOptions &
-  StackNavigationOptions &
+  // StackNavigationOptions &
   // DrawerNavigationOptions &
   BottomTabNavigationOptions = {
   headerShown: false,
@@ -82,10 +81,10 @@ export const DEFAULT_NAVIGATION_OPTIONS: NativeStackNavigationOptions &
 };
 
 export const generateImageName = (user: any) => {
-  const timestamp = new Date().getTime();
-  return `CAMERA_${userHelper
-    .getUserFullName(user)
-    .replace(/ /g, '_')}_${timestamp.toString()}.jpeg`;
+  // const timestamp = new Date().getTime();
+  // return `CAMERA_${userHelper
+  //   .getUserFullName(user)
+  //   .replace(/ /g, '_')}_${timestamp.toString()}.jpeg`;
 };
 export const WEEK_DAYS_VALUES = [
   { value: 'Dim.', selected: true },
@@ -96,5 +95,30 @@ export const WEEK_DAYS_VALUES = [
   { value: 'Ven.', selected: true },
   { value: 'Sam.', selected: true },
 ];
+export const colors = {
+  primary: "#1565C0", // Bleu profond
+  onPrimary: "#FFFFFF", // Texte sur le bleu
+
+  primaryContainer: "#E3F2FD", // Bleu clair (contenant)
+  onPrimaryContainer: "#0D47A1", // Texte sur container
+
+  secondary: "#FF7043", // Orange doux
+  onSecondary: "#FFFFFF",
+
+  secondaryContainer: "#FFECE4",
+  onSecondaryContainer: "#BF360C",
+
+  background: "#FAFAFA",
+  onBackground: "#212121",
+
+  surface: "#FFFFFF",
+  onSurface: "#000000",
+
+  error: "#B00020",
+  onError: "#FFFFFF",
+
+  outline: "#BDBDBD", // Gris pour bordures
+  shadow: "#000000", // Pour effets d'ombre
+};
 
 export const primaryColor = 'bg-orange-500';

@@ -6,6 +6,7 @@ import Avatar from "./display/Avatar";
 import { scale } from "react-native-size-matters";
 import { Link } from "expo-router";
 import * as SecureStore from "expo-secure-store";
+import { colors } from "@/utils/constants";
 
 export interface HeaderProps {
   showBackButton?: boolean;
@@ -126,7 +127,7 @@ const styles = StyleSheet.create({
   loginButton: {
     paddingVertical: 6,
     paddingHorizontal: 14,
-    backgroundColor: "#f97316",
+    backgroundColor: colors.primary,
     borderRadius: 20,
     marginLeft: 10,
   },

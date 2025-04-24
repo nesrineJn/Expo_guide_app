@@ -19,6 +19,7 @@ import { Link, useNavigation } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import axios from "axios";
 import Header from "@/components/Header copy";
+import { colors } from "@/utils/constants";
 
 const fakeUsers = [
   { id: "1", avatar: "https://i.pravatar.cc/300?img=1" },
@@ -44,7 +45,7 @@ export default function HomeScreen() {
     const fetchOffres = async () => {
       try {
         setIsLoading(true);
-        fetch("http://172.16.19.203:4000/offres")
+        fetch("http:/192.168.1.16:4000/offres")
           .then((response) => response.json())
           .then((json) => {
             setOffres(json);
@@ -157,7 +158,7 @@ const styles = StyleSheet.create({
 
   banner: { marginVertical: 20, paddingHorizontal: 16 },
   bannerText: { fontSize: 28, fontWeight: "bold", lineHeight: 34 },
-  bannerHighlight: { color: "#f97316" },
+  bannerHighlight: { color: colors.primary },
 
   section: { marginTop: 20 },
   sectionHeader: {
@@ -169,7 +170,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { fontSize: 20, fontWeight: "bold" },
   viewAll:{
-    color: "#f97316",
+    color: colors.primary,
     fontWeight: "bold",
     textDecorationLine: "underline",
 

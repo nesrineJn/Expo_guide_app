@@ -23,6 +23,7 @@ import { Colors } from "react-native/Libraries/NewAppScreen";
 import * as SecureStore from "expo-secure-store";
 
 import { Alert } from "react-native";
+import { colors } from "@/utils/constants";
 const Details = () => {
   const navigation = useNavigation();
   const route = useRoute();
@@ -33,6 +34,12 @@ const Details = () => {
     titre: string;
     prix: number;
     description: string;
+    guideId:{
+      _id: string;
+      fullName: string
+      email: string;
+      profileImage: string;
+    }
   }
 
   const [offer, setOffer] = useState<Offer | null>(null);
@@ -57,7 +64,7 @@ const Details = () => {
       setToken(token);
       try {
         setIsLoading(true);
-        fetch(`http://172.16.19.203:4000/offres/${id}`)
+        fetch(`http:/192.168.1.16:4000/offres/${id}`)
           .then((response) => {
             if (!response.ok) {
               throw new Error("Erreur lors du chargement des détails.");
@@ -80,7 +87,7 @@ const Details = () => {
 
       try {
         const response = await fetch(
-          "http://172.16.19.203:4000/reservations/getByOfferAndTouristId",
+          "http:/192.168.1.16:4000/reservations/getByOfferAndTouristId",
           {
             method: "POST",
             headers: {
@@ -141,7 +148,7 @@ const Details = () => {
     });
 
     try {
-      const response = await fetch("http://172.16.19.203:4000/reservations", {
+      const response = await fetch("http:/192.168.1.16:4000/reservations", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -197,7 +204,7 @@ const Details = () => {
 
     try {
       const response = await fetch(
-        `http://172.16.19.203:4000/reservations/${reservation._id}`,
+        ` http:/192.168.1.16:4000/reservations/${reservation._id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -228,7 +235,7 @@ const Details = () => {
           onPress: async () => {
             try {
               const response = await fetch(
-                `http://172.16.19.203:4000/reservations/${reservation._id}`,
+                ` http:/192.168.1.16:4000/reservations/${reservation._id}`,
                 {
                   method: "DELETE",
                   headers: { "Content-Type": "application/json" },
@@ -251,11 +258,13 @@ const Details = () => {
   if (isError || !offer) {
     return (
       <View style={styles.errorContainer}>
-        <ActivityIndicator size="large" color="#f97316" />
+        <ActivityIndicator size="large" color={colors.primary }/>
       </View>
     );
   }
+  console.log(JSON.stringify(offer, null, 2))
 
+  
   return (
     <>
       <ScrollView
@@ -266,8 +275,27 @@ const Details = () => {
         <Image source={{ uri: offer.photos[0] }} style={styles.headerImage} />
 
         <View style={styles.detailsContainer}>
+        <TouchableOpacity
+          style={styles.guideContainer}
+          onPress={() => router.push({
+            pathname: "/GuideProfileScreen",
+            params: {
+              id: offer.guideId._id,
+              name: offer.guideId.fullName,
+              email: offer.guideId.email,
+              profileImage: offer.guideId.profileImage,
+            }
+          })}
+          
+        >
+          <Image source={{ uri: offer.guideId.profileImage||'' }} style={styles.avatar} />
+          <View style={styles.guideInfo||''}>
+            <Text style={styles.guideName}>{offer.guideId.fullName||''}</Text>
+            <Text style={styles.guideEmail}>{offer.guideId.email||''}</Text>
+          </View>
+        </TouchableOpacity>
           <Text style={styles.title}>{offer.titre}</Text>
-
+       
           <Text style={styles.location}>
             <MaterialIcons name="location-on" size={14} color="gray" /> Tunisia,
             Sidi Bou Said
@@ -289,6 +317,7 @@ const Details = () => {
             showsHorizontalScrollIndicator={false}
             style={styles.photoList}
           />
+
 
           <Text style={styles.sectionTitle}>Description</Text>
           <Text style={styles.description}>
@@ -417,10 +446,10 @@ const styles = StyleSheet.create({
   ratingText: { marginLeft: 5, color: "gray" },
   price: {
     marginLeft: "auto",
-    backgroundColor: "#FF70434D",
+    backgroundColor: colors.primaryContainer,
     padding: 4,
     borderRadius: 10,
-    color: "#f97316",
+    color: colors.onPrimaryContainer,
   },
   photoList: { marginVertical: 10 },
   thumbnail: {
@@ -432,7 +461,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 18, fontWeight: "bold", marginTop: 20 },
   description: { fontSize: 14, color: "gray", marginTop: 10 },
   bookButton: {
-    backgroundColor: "#f97316",
+    backgroundColor: colors.primary,
     paddingVertical: 10,
     width: "90%",
     borderRadius: 10,
@@ -444,24 +473,26 @@ const styles = StyleSheet.create({
   modalContainer: {
     backgroundColor: "white",
     padding: 20,
-    marginTop: 450,
+    marginTop: 580,
     minHeight: 250,
-    borderRadius: 10,
+    borderTopStartRadius: 10,
+    borderTopEndRadius: 10,
+
     width: "100%",
   },
   modalTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 15 },
   choiceContainer: { flexDirection: "row", justifyContent: "space-between" },
   choiceButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    marginHorizontal: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    marginHorizontal: 2,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "gray",
     flex: 1,
     alignItems: "center",
   },
-  selectedChoice: { borderColor: "#f97316" },
+  selectedChoice: { borderColor: colors.primary },
   choiceText: { fontSize: 14, fontWeight: "bold" },
   input: {
     marginTop: 10,
@@ -472,7 +503,7 @@ const styles = StyleSheet.create({
   },
   confirmButton: {
     marginTop: 20,
-    backgroundColor: "#f97316",
+    backgroundColor: colors.primary,
     borderRadius: 10,
   },
   fixedButtonContainer: {
@@ -494,7 +525,7 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     backgroundColor: "transparent",
-    borderColor: "#f97316",
+    borderColor: colors.primary,
     borderWidth: 2,
     paddingVertical: 8,
     flex: 1,
@@ -502,12 +533,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   cancelButtonText: {
-    color: "#f97316",
+    color: colors.primary,
     fontWeight: "bold",
   },
 
   updateButton: {
-    backgroundColor: "#f97316",
+    backgroundColor: colors.primary,
     paddingVertical: 8,
     flex: 1,
     borderRadius: 10,
@@ -515,6 +546,36 @@ const styles = StyleSheet.create({
   },
   cancelledText: {},
   selectedText: {},
+  guideContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingBottom: 12,
+    paddingHorizontal: 0,
+    // borderTopWidth: 0.5,
+    borderBottomWidth: 0.5,
+    borderColor: "lightgray",
+    marginBottom: 10,
+    backgroundColor: "#fff",
+  },
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 12,
+  },
+  guideInfo: {
+    flex: 1,
+  },
+  guideName: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#000",
+  },
+  guideEmail: {
+    fontSize: 14,
+    color: "gray",
+  },
+  
 });
 
 export default Details;

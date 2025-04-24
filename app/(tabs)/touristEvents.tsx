@@ -63,7 +63,7 @@ const TouristEvents = () => {
         formattedDates.length > 0 ? { dates: formattedDates } : {};
 
       const response = await fetch(
-        `http://172.16.19.203:4000/reservations/byTouriste/${idUser}`,
+        `http:/192.168.1.16:4000/reservations/byTouriste/${idUser}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

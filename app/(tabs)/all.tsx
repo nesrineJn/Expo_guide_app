@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigation } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Header from "@/components/Header copy";
+import { colors } from "@/utils/constants";
 const fakeUsers = [
   { id: "1", avatar: "https://i.pravatar.cc/300?img=1" },
   { id: "2", avatar: "https://i.pravatar.cc/300?img=2" },
@@ -39,7 +40,7 @@ const all = () => {
     const fetchOffres = async () => {
       try {
         setIsLoading(true);
-        fetch("http://172.16.19.203:4000/offres")
+        fetch("http:/192.168.1.16:4000/offres")
           .then((response) => response.json())
           .then((json) => {
             setOffres(json);
@@ -55,6 +56,7 @@ const all = () => {
 
     fetchOffres();
   }, []);
+  console.log()
 
   return (
     <View style={styles.container}>
@@ -182,13 +184,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   priceTag: {
-    backgroundColor: "#FF70434D",
+    backgroundColor: colors.primaryContainer,
     borderRadius: 15,
     paddingVertical: 2,
     paddingHorizontal: 8,
   },
   priceText: {
-    color: "#FF7043",
+    color: colors.onPrimaryContainer,
+    fontSize:12
     // fontWeight: "bold",
   },
   infoRow: {
