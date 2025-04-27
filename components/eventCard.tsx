@@ -26,8 +26,9 @@ const getStatusStyle = (status: string) => {
   switch (status) {
     case "ONGOING":
       return { backgroundColor: "#FF70434D", color: "#FF7043" };
-    case "ACCEPT":
-      return { backgroundColor: "#10B981", color: "#fff" };
+      case "ACCEPT":
+        return { backgroundColor: "#D1FAE5", color: "#10B981" };
+      
     case "CANCELED":
       return { backgroundColor: "#EF4444", color: "#fff" };
     default:
@@ -55,9 +56,9 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ item }) => {
           />
 
           {/* Contenu Texte */}
-          <View style={tw`flex-1 ml-4`}>
+          <View style={tw`flex-1 ml-4 mxh`}>
             <Text 
-              style={tw`text-sm font-semibold text-gray-900`} 
+              style={tw`text-sm font-semibold text-gray-900 max-w-[200px]`} 
               numberOfLines={2} 
               ellipsizeMode="tail"
             >
@@ -73,7 +74,7 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ item }) => {
           {/* Badge Statut */}
           <Badge
             style={[
-              tw`self-start px-3 rounded-full`,
+              tw`self-start px-3 mt-2 mr-1 rounded-full`,
               { backgroundColor: getStatusStyle(item.status).backgroundColor, color: getStatusStyle(item.status).color, fontSize: 11, fontWeight: "bold" },
             ]}
           >
