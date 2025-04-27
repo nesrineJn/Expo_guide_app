@@ -121,7 +121,7 @@ export default function EditProfileScreen() {
           mode="contained"
           onPress={handleSubmit(onSubmit)}
           style={styles.saveButton}
-          contentStyle={{ paddingVertical: 8 }}
+          contentStyle={{ paddingVertical: 5 }}
         >
           Sauvegarder
         </Button>

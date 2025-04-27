@@ -16,6 +16,7 @@ import {
 
 import { colors } from "@/utils/constants";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { router, useLocalSearchParams } from "expo-router";
 
 const AddCardScreen = () => {
   const [cardDetails, setCardDetails] = useState<CardFieldInput.Details | null>(
@@ -23,18 +24,21 @@ const AddCardScreen = () => {
   );
   const [cardHolderName, setCardHolderName] = useState("");
   const [isCardComplete, setIsCardComplete] = useState(false);
-
+  const params = useLocalSearchParams();
+  const { offerId, touristId, numberOfPersons } = params || {};
+  const fromReservation = !!offerId; // s'il vient de reservation
+  // console.log(fromReservation ,offerId ,touristId , numberOfPersons)
   const stripe = useStripe();
-  //ya maher hedha current user mena djibou  
-  const currentUser = useCurrentUser()
+  //ya maher hedha current user mena djibou
+  const currentUser = useCurrentUser();
   const userId = currentUser.userData?._id;
-//   console.log(userId)
-    const handleAddCard = async () => {
+  //   console.log(userId)
+  const handleAddCard = async () => {
     // if (!cardDetails?.complete || !cardHolderName.trim()) {
-    //   alert("Veuillez remplir toutes les informations.");
+    //   alert("Veuillez remplir toutes les informations de la carte.");
     //   return;
     // }
-  
+
     try {
       const { paymentMethod, error } = await stripe.createPaymentMethod({
         paymentMethodType: "Card",
@@ -42,44 +46,79 @@ const AddCardScreen = () => {
           billingDetails: { name: cardHolderName },
         },
       });
-  
+
       if (error || !paymentMethod) {
-        alert(error?.message || "Erreur lors de la création du moyen de paiement.");
+        alert(
+          error?.message || "Erreur lors de la création du moyen de paiement."
+        );
         return;
       }
-  
-      // Ici APPEL À TON BACKEND
+
+      // Envoyer la carte au backend
       const body = {
         paymentMethodId: paymentMethod.id,
         cardHolderName: cardHolderName,
-        userId: userId, 
+        userId: userId,
       };
-  
-      console.log("Sending body to /add-card:", body);
-  
+
       const response = await fetch("http://192.168.1.16:4000/stripe/add-card", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-        //   Authorization: `Bearer ${currentUser.token}`, // si besoin d'un token
         },
         body: JSON.stringify(body),
       });
-  
+
       const data = await response.json();
-  
-      if (response.ok) {
-        alert("Votre carte a été ajoutée avec succès !");
-      } else {
+
+      if (!response.ok) {
         console.error(data);
         alert(data.message || "Erreur lors de l'ajout de la carte.");
+        return;
       }
+
+      if (fromReservation && offerId && touristId && numberOfPersons) {
+        try {
+          const reservationResponse = await fetch(
+            "http://192.168.1.16:4000/reservations",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                touristId,
+                offerId,
+                numberOfPersons: Number(numberOfPersons),
+              }),
+            }
+          );
+
+          const reservationData = await reservationResponse.json();
+
+          if (reservationResponse.ok) {
+            alert(
+              "Votre carte et votre réservation ont été ajoutées avec succès !"
+            );
+          } else {
+            console.error(reservationData);
+            alert(
+              reservationData.message ||
+                "Erreur lors de la création de la réservation."
+            );
+          }
+        } catch (error) {
+          console.error(error);
+          alert("Erreur lors de la création de la réservation.");
+        }
+      } else {
+        alert("Votre carte a été ajoutée avec succès !");
+      }
+
+      router.back(); // ➔ retour dans tous les cas (carte seule ou carte + réservation)
     } catch (error) {
       console.error(error);
       alert("Erreur lors de l'ajout de la carte.");
     }
   };
-  
 
   const formatCardNumber = (number: string | undefined) => {
     if (!number) return "**** **** **** ****";
@@ -146,33 +185,32 @@ const AddCardScreen = () => {
             postalCodeEnabled={false}
             placeholders={{ number: "4242 4242 4242 4242" }}
             cardStyle={{
-                backgroundColor: "#f9fafb",
-                textColor: "#1e293b",
-                placeholderColor: "#9ca3af",
-                borderWidth: 1,
-                borderColor: "#e5e7eb",
-                borderRadius: 12,
+              backgroundColor: "#f9fafb",
+              textColor: "#1e293b",
+              placeholderColor: "#9ca3af",
+              borderWidth: 1,
+              borderColor: "#e5e7eb",
+              borderRadius: 12,
             }}
             style={styles.cardContainer}
             onCardChange={(details) => {
-                setIsCardComplete(details.complete ?? false); 
+              setIsCardComplete(details.complete ?? false);
             }}
-            />
+          />
 
-
-            <TouchableOpacity
+          <TouchableOpacity
             style={[
-                styles.button,
-                (!cardHolderName || !cardDetails?.complete) && {
-                // backgroundColor: "#cbd5e1",
+              styles.button,
+              (!cardHolderName || !cardDetails?.complete) &&
+                {
+                  // backgroundColor: "#cbd5e1",
                 },
             ]}
             onPress={handleAddCard}
             // disabled={!cardHolderName || !cardDetails?.complete}
-            >
+          >
             <Text style={styles.buttonText}>Ajouter Carte</Text>
-            </TouchableOpacity>
-
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>

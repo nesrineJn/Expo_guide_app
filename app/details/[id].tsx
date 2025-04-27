@@ -8,6 +8,9 @@ import {
   StyleSheet,
   TextInput,
   Modal as ModalPhoto,
+  KeyboardAvoidingView,
+  Platform,
+  ToastAndroid,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -28,6 +31,9 @@ import { colors } from "@/utils/constants";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ImageViewer from "react-native-image-zoom-viewer";
 import { tr } from "date-fns/locale";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import PaymentRequiredModal from "../PaymentRequiredModal";
+import { showMessage } from "react-native-flash-message";
 const Details = () => {
   const navigation = useNavigation();
   const route = useRoute();
@@ -135,51 +141,78 @@ const Details = () => {
     setIsModalVisible(true);
     if (!token) return router.replace("/login");
   };
+  const [isPaymentModalVisible, setIsPaymentModalVisible] = useState(false);
+  const [pendingReservation, setPendingReservation] = useState<{
+    touristId: string;
+    offerId: string;
+    numberOfPersons: string;
+  } | null>(null);
+
+  const { userData, isLoading: isUserLoading } = useCurrentUser();
+  const hasCart = userData?.hasCart
+  console.log(userData?.hasCart)
+  // const hasCard = false;
 
   const closeModal = async () => {
     const placesToSend = reservationType === "personal" ? 1 : Number(numPlaces);
 
     if (!placesToSend || isNaN(placesToSend) || placesToSend <= 0) {
-      alert("Please enter a valid number of places.");
+      alert("Veuillez entrer un nombre valide de places.");
       return;
     }
 
     setIsModalVisible(false);
+
     const idUser = await SecureStore.getItemAsync("currentUser");
 
-    console.log("Sending data:", {
-      touristId: idUser,
-      offerId: id,
-      numberOfPersons: placesToSend,
-    });
+    if (hasCart) {
+      try {
+        const response = await fetch("http://192.168.1.16:4000/reservations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            touristId: idUser,
+            offerId: id,
+            numberOfPersons: placesToSend,
+          }),
+        });
 
-    try {
-      const response = await fetch("http:/192.168.1.16:4000/reservations", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          touristId: idUser,
-          offerId: id,
-          numberOfPersons: placesToSend,
-        }),
-      });
+        const responseText = await response.text();
+        if (!response.ok) throw new Error(responseText);
 
-      const responseText = await response.text();
-      // console.log("Raw server response:", responseText);
-
-      if (!response.ok) {
-        console.error("Server Error:", response.status, response.statusText);
-        throw new Error("Error creating reservation.");
+        const json = JSON.parse(responseText);
+        setReservation(json);
+        showMessage({
+          message: "Réservation en attente ⏳",
+          description: "Votre réservation est en attente de confirmation du guide. 🤝",
+          type: "warning", 
+          duration: 4000, 
+        });
+      } catch (error: any) {
+        console.error("Erreur de réservation:", error);
+      
+        const message = error.message?.toLowerCase();
+        const isPlacesError =
+          message?.includes("number of persons exceeds") ||
+          message?.includes("maximum limit") ||
+          message?.includes("place");
+      
+        showMessage({
+          message: "Erreur ❗",
+          description: isPlacesError
+            ? "Nombre de places insuffisant pour effectuer la réservation. 🚫"
+            : "Erreur lors de la création de la réservation.",
+          type: "danger",
+          duration: 4000,
+        });
       }
-
-      const json = JSON.parse(responseText);
-      // console.log("Server response:", json)
-
-      setReservation(json);
-    } catch (error) {
-      console.error("Error:", error);
+    } else {
+      setIsPaymentModalVisible(true); 
+      setPendingReservation({
+        touristId: idUser,
+        offerId: id,
+        numberOfPersons: placesToSend.toString(),
+      });
     }
   };
 
@@ -207,7 +240,7 @@ const Details = () => {
 
   const updateReservation = async () => {
     if (!reservation) return;
-
+  
     try {
       const response = await fetch(
         `http:/192.168.1.16:4000/reservations/${reservation._id}`,
@@ -217,19 +250,43 @@ const Details = () => {
           body: JSON.stringify({ numberOfPersons: numPlaces }),
         }
       );
-
+  
       if (!response.ok) throw new Error("Error updating reservation.");
-
+  
       console.log("Reservation updated successfully!");
       setIsModalVisible(false);
-    } catch (error) {
+  
+      // ➡️ Nouveau flash message pour update réussi
+      showMessage({
+        message: "Réservation mise à jour ✅",
+        description: "Le nombre de places a été modifié avec succès.",
+        type: "success",
+        duration: 4000,
+      });
+  
+    } catch (error: any) {
       console.error("Update failed:", error);
+    
+      const message = error.message?.toLowerCase();
+      const isPlacesError =
+        message?.includes("number of persons exceeds") ||
+        message?.includes("maximum limit") ||
+        message?.includes("place");
+    
+      showMessage({
+        message: "Erreur ❗",
+        description: isPlacesError
+          ? "Nombre de places insuffisant pour mettre à jour. 🚫"
+          : "Impossible de mettre à jour la réservation.",
+        type: "danger",
+        duration: 4000,
+      });
     }
+    
   };
-
   const handleCancelReservation = () => {
     if (!reservation) return;
-
+  
     Alert.alert(
       "Cancel Reservation",
       "Are you sure you want to cancel this reservation? This action cannot be undone.",
@@ -247,11 +304,19 @@ const Details = () => {
                   headers: { "Content-Type": "application/json" },
                 }
               );
-
+  
               if (!response.ok) throw new Error("Error canceling reservation.");
-
+  
               console.log("Reservation canceled successfully!");
               setReservation(null);
+  
+              showMessage({
+                message: "Réservation annulée ❌",
+                description: "Votre réservation a été annulée avec succès.",
+                type: "danger",
+                duration: 4000,
+              });
+  
             } catch (error) {
               console.error("Cancel failed:", error);
             }
@@ -260,6 +325,7 @@ const Details = () => {
       ]
     );
   };
+  
 
   if (isError || !offer) {
     return (
@@ -387,68 +453,91 @@ const Details = () => {
       </View>
 
       <Portal>
-        <Modal
+        <ModalPhoto
           visible={isModalVisible}
-          onDismiss={() => setIsModalVisible(false)}
-          contentContainerStyle={styles.modalContainer}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setIsModalVisible(false)}
         >
-          <Text style={styles.modalTitle}>Select Reservation Type</Text>
-
-          <View style={styles.choiceContainer}>
-            <TouchableOpacity
-              style={[
-                styles.choiceButton,
-                reservationType === "personal" && styles.selectedChoice,
-              ]}
-              onPress={() => setReservationType("personal")}
+          <View style={styles.modalBackdrop}>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              style={styles.modalContent}
             >
-              <Text
-                style={[
-                  styles.choiceText,
-                  reservationType === "personal" && styles.selectedText,
-                ]}
+              <ScrollView
+                contentContainerStyle={styles.scrollContent}
+                keyboardShouldPersistTaps="handled"
               >
-                Personal Reservation
-              </Text>
-            </TouchableOpacity>
+                <View style={styles.modalHeader}>
+                  <TouchableOpacity onPress={() => setIsModalVisible(false)}>
+                    <Text style={styles.closeButtonText}>✕</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.modalTitle}>Select Reservation Type</Text>
+                  <View style={{ width: 24 }} /> {/* équilibre */}
+                </View>
 
-            <TouchableOpacity
-              style={[
-                styles.choiceButton,
-                reservationType === "group" && styles.selectedChoice,
-              ]}
-              onPress={() => setReservationType("group")}
-            >
-              <Text
-                style={[
-                  styles.choiceText,
-                  reservationType === "group" && styles.selectedText,
-                ]}
-              >
-                Group Reservation
-              </Text>
-            </TouchableOpacity>
+                {/* Le reste du contenu */}
+                <View style={styles.choiceContainer}>
+                  <TouchableOpacity
+                    style={[
+                      styles.choiceButton,
+                      reservationType === "personal" && styles.selectedChoice,
+                    ]}
+                    onPress={() => setReservationType("personal")}
+                  >
+                    <Text
+                      style={[
+                        styles.choiceText,
+                        reservationType === "personal" && styles.selectedText,
+                      ]}
+                    >
+                      Personal Reservation
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.choiceButton,
+                      reservationType === "group" && styles.selectedChoice,
+                    ]}
+                    onPress={() => setReservationType("group")}
+                  >
+                    <Text
+                      style={[
+                        styles.choiceText,
+                        reservationType === "group" && styles.selectedText,
+                      ]}
+                    >
+                      Group Reservation
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* input si group */}
+                {reservationType === "group" && (
+                  <TextInput
+                    style={styles.input}
+                    keyboardType="numeric"
+                    placeholder="Number of seats"
+                    value={numPlaces}
+                    onChangeText={setNumPlaces}
+                  />
+                )}
+
+                {/* bouton de validation */}
+                <Button
+                  mode="contained"
+                  onPress={reservation ? updateReservation : closeModal}
+                  style={styles.confirmButton}
+                >
+                  {reservation ? "Update Reservation" : "Confirm"}
+                </Button>
+              </ScrollView>
+            </KeyboardAvoidingView>
           </View>
-
-          {reservationType === "group" && (
-            <TextInput
-              style={styles.input}
-              keyboardType="numeric"
-              placeholder="Number of seats"
-              value={numPlaces}
-              onChangeText={setNumPlaces}
-            />
-          )}
-
-          <Button
-            mode="contained"
-            onPress={reservation ? updateReservation : closeModal}
-            style={styles.confirmButton}
-          >
-            {reservation ? "Update Reservation" : "Confirm"}
-          </Button>
-        </Modal>
+        </ModalPhoto>
       </Portal>
+
       <ModalPhoto
         visible={isImageViewerVisible}
         onDismiss={() => setIsImageViewerVisible(false)}
@@ -464,11 +553,64 @@ const Details = () => {
           />
         </SafeAreaView>
       </ModalPhoto>
+      <PaymentRequiredModal
+        visible={isPaymentModalVisible}
+        onClose={() => setIsPaymentModalVisible(false)}
+        onConfirm={() => {
+          if (pendingReservation) {
+            router.push({
+              pathname: "/AddCardScreen",
+              params: pendingReservation,
+            });
+            setIsPaymentModalVisible(false);
+          }
+        }}
+      />
     </>
   );
 };
 
 const styles = StyleSheet.create({
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
+  },
+
+  modalContent: {
+    backgroundColor: "white",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: "50%",
+    width: "100%",
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  closeButtonText: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
+    flex: 1,
+  },
+  closeButton: {
+    alignSelf: "flex-end",
+    padding: 10,
+  },
+
   container: { flex: 1, backgroundColor: "#F9F9F9" },
   errorContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   headerImage: { width: "100%", height: 250 },
@@ -519,7 +661,7 @@ const styles = StyleSheet.create({
 
     width: "100%",
   },
-  modalTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 15 },
+
   choiceContainer: { flexDirection: "row", justifyContent: "space-between" },
   choiceButton: {
     paddingVertical: 12,
