@@ -7,23 +7,27 @@ import {
   FlatList,
   StyleSheet,
   TextInput,
+  Modal as ModalPhoto,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router, useNavigation } from "expo-router";
 import { useRoute } from "@react-navigation/native";
 import {
-  Modal,
   Portal,
   Button,
   useTheme,
   ActivityIndicator,
+  Modal,
 } from "react-native-paper";
 import { Colors } from "react-native/Libraries/NewAppScreen";
 import * as SecureStore from "expo-secure-store";
 
 import { Alert } from "react-native";
 import { colors } from "@/utils/constants";
+import { SafeAreaView } from "react-native-safe-area-context";
+import ImageViewer from "react-native-image-zoom-viewer";
+import { tr } from "date-fns/locale";
 const Details = () => {
   const navigation = useNavigation();
   const route = useRoute();
@@ -34,12 +38,12 @@ const Details = () => {
     titre: string;
     prix: number;
     description: string;
-    guideId:{
+    guideId: {
       _id: string;
-      fullName: string
+      fullName: string;
       email: string;
       profileImage: string;
-    }
+    };
   }
 
   const [offer, setOffer] = useState<Offer | null>(null);
@@ -49,6 +53,9 @@ const Details = () => {
   const [reservationType, setReservationType] = useState("personal");
   const [numPlaces, setNumPlaces] = useState("");
   const [token, setToken] = useState<string | null>(null);
+  const [isImageViewerVisible, setIsImageViewerVisible] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
   interface Reservation {
     _id: string;
     numberOfPersons: number;
@@ -103,7 +110,7 @@ const Details = () => {
         if (response.ok) {
           const resData = await response.json();
 
-          console.log("resData", response);
+          // console.log("resData", response);
           if (resData.length > 0) {
             setReservation(resData[0]);
           }
@@ -130,7 +137,6 @@ const Details = () => {
   };
 
   const closeModal = async () => {
-
     const placesToSend = reservationType === "personal" ? 1 : Number(numPlaces);
 
     if (!placesToSend || isNaN(placesToSend) || placesToSend <= 0) {
@@ -161,7 +167,7 @@ const Details = () => {
       });
 
       const responseText = await response.text();
-      console.log("Raw server response:", responseText);
+      // console.log("Raw server response:", responseText);
 
       if (!response.ok) {
         console.error("Server Error:", response.status, response.statusText);
@@ -169,7 +175,7 @@ const Details = () => {
       }
 
       const json = JSON.parse(responseText);
-      console.log("Server response:", json);
+      // console.log("Server response:", json)
 
       setReservation(json);
     } catch (error) {
@@ -184,7 +190,7 @@ const Details = () => {
       reservationType === "group" &&
       (!numPlaces || numPlaces === "1")
     ) {
-      setNumPlaces(""); 
+      setNumPlaces("");
     }
   }, [reservationType]);
 
@@ -204,7 +210,7 @@ const Details = () => {
 
     try {
       const response = await fetch(
-        ` http:/192.168.1.16:4000/reservations/${reservation._id}`,
+        `http:/192.168.1.16:4000/reservations/${reservation._id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -235,7 +241,7 @@ const Details = () => {
           onPress: async () => {
             try {
               const response = await fetch(
-                ` http:/192.168.1.16:4000/reservations/${reservation._id}`,
+                `http:/192.168.1.16:4000/reservations/${reservation._id}`,
                 {
                   method: "DELETE",
                   headers: { "Content-Type": "application/json" },
@@ -258,13 +264,12 @@ const Details = () => {
   if (isError || !offer) {
     return (
       <View style={styles.errorContainer}>
-        <ActivityIndicator size="large" color={colors.primary }/>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
-  console.log(JSON.stringify(offer, null, 2))
+  // console.log(JSON.stringify(offer, null, 2))
 
-  
   return (
     <>
       <ScrollView
@@ -272,30 +277,43 @@ const Details = () => {
         contentContainerStyle={{ flexGrow: 1, paddingBottom: 80 }}
         showsVerticalScrollIndicator={false}
       >
-        <Image source={{ uri: offer.photos[0] }} style={styles.headerImage} />
+        <TouchableOpacity
+          onPress={() => {
+            setSelectedImageIndex(0);
+            setIsImageViewerVisible(true);
+          }}
+        >
+          <Image source={{ uri: offer.photos[0] }} style={styles.headerImage} />
+        </TouchableOpacity>
 
         <View style={styles.detailsContainer}>
-        <TouchableOpacity
-          style={styles.guideContainer}
-          onPress={() => router.push({
-            pathname: "/GuideProfileScreen",
-            params: {
-              id: offer.guideId._id,
-              name: offer.guideId.fullName,
-              email: offer.guideId.email,
-              profileImage: offer.guideId.profileImage,
+          <TouchableOpacity
+            style={styles.guideContainer}
+            onPress={() =>
+              router.push({
+                pathname: "/GuideProfileScreen",
+                params: {
+                  id: offer.guideId._id,
+                  name: offer.guideId.fullName,
+                  email: offer.guideId.email,
+                  profileImage: offer.guideId.profileImage,
+                },
+              })
             }
-          })}
-          
-        >
-          <Image source={{ uri: offer.guideId.profileImage||'' }} style={styles.avatar} />
-          <View style={styles.guideInfo||''}>
-            <Text style={styles.guideName}>{offer.guideId.fullName||''}</Text>
-            <Text style={styles.guideEmail}>{offer.guideId.email||''}</Text>
-          </View>
-        </TouchableOpacity>
+          >
+            <Image
+              source={{ uri: offer.guideId.profileImage || "" }}
+              style={styles.avatar}
+            />
+            <View style={styles.guideInfo || ""}>
+              <Text style={styles.guideName}>
+                {offer.guideId.fullName || ""}
+              </Text>
+              <Text style={styles.guideEmail}>{offer.guideId.email || ""}</Text>
+            </View>
+          </TouchableOpacity>
           <Text style={styles.title}>{offer.titre}</Text>
-       
+
           <Text style={styles.location}>
             <MaterialIcons name="location-on" size={14} color="gray" /> Tunisia,
             Sidi Bou Said
@@ -310,14 +328,20 @@ const Details = () => {
           <FlatList
             data={offer.photos}
             keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item }) => (
-              <Image source={{ uri: item }} style={styles.thumbnail} />
+            renderItem={({ item, index }) => (
+              <TouchableOpacity
+                onPress={() => {
+                  setSelectedImageIndex(index);
+                  setIsImageViewerVisible(true);
+                }}
+              >
+                <Image source={{ uri: item }} style={styles.thumbnail} />
+              </TouchableOpacity>
             )}
             horizontal
             showsHorizontalScrollIndicator={false}
             style={styles.photoList}
           />
-
 
           <Text style={styles.sectionTitle}>Description</Text>
           <Text style={styles.description}>
@@ -425,6 +449,21 @@ const Details = () => {
           </Button>
         </Modal>
       </Portal>
+      <ModalPhoto
+        visible={isImageViewerVisible}
+        onDismiss={() => setIsImageViewerVisible(false)}
+        transparent={true}
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: "black" }}>
+          <ImageViewer
+            imageUrls={offer.photos.map((url) => ({ url }))}
+            index={selectedImageIndex}
+            enableSwipeDown
+            onSwipeDown={() => setIsImageViewerVisible(false)}
+            onCancel={() => setIsImageViewerVisible(false)}
+          />
+        </SafeAreaView>
+      </ModalPhoto>
     </>
   );
 };
@@ -575,7 +614,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "gray",
   },
-  
 });
 
 export default Details;

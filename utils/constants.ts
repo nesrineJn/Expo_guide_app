@@ -108,7 +108,7 @@ export const colors = {
   secondaryContainer: "#FFECE4",
   onSecondaryContainer: "#BF360C",
 
-  background: "#FAFAFA",
+  background: "#f7fbff",
   onBackground: "#212121",
 
   surface: "#FFFFFF",

@@ -11,13 +11,14 @@ import { useForm, Controller } from "react-hook-form";
 import { Button, Text } from "react-native-paper";
 import * as SecureStore from "expo-secure-store";
 import { Link, Stack } from "expo-router";
-import colors from "tailwindcss/colors";
+
 
 import Screen from "@/components/screen";
 import Input from "@/components/Input";
 import Typography from "@/components/typography";
 import { useLoading } from "@/hooks/useLoading";
 import Image from "@/components/display/Image";
+import { colors } from "@/utils/constants";
 
 export type RegisterForm = {
   email: string;
@@ -64,10 +65,10 @@ const RegisterScreen = ({ navigation }: any) => {
         <View style={styles.container}>
           <ScrollView contentContainerStyle={styles.scrollViewContent}>
             {/* Logo */}
-            {/* <Image
-              // source={require("../../assets/images/logoguide.png")}
+            <Image
+              source={require("../../assets/images/logo.png")}
               style={styles.logo}
-            /> */}
+            />
 
             {/* Title */}
             <Text style={styles.title}>Create an Account</Text>
@@ -243,7 +244,7 @@ const styles = StyleSheet.create({
   },
   logo: {
     width: 150,
-    height: 150,
+    height: 160,
     marginBottom: 20,
   },
   title: {
@@ -253,7 +254,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
-    color: colors.gray[500],
+    color: colors.onBackground,
     marginBottom: 20,
   },
   input: {
@@ -261,18 +262,18 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   errorText: {
-    color: colors.red[500],
+    color: colors.error,
     fontSize: 13,
   },
   registerButton: {
-    backgroundColor: colors.orange[500],
+    backgroundColor: colors.primary,
     borderRadius: 10,
     paddingVertical: 6,
     marginBottom: 20,
     width: "100%",
   },
   buttonText: {
-    color: colors.white,
+    color: colors.onPrimary,
     fontSize: 16,
   },
   signInContainer: {
@@ -283,7 +284,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   signInLink: {
-    color: colors.blue[500],
+    color: colors.primary,
     marginLeft: 5,
     fontWeight: "bold",
   },

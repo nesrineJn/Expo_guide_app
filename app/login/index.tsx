@@ -12,11 +12,12 @@ import Input from "@/components/Input";
 import Typography from "@/components/typography";
 import { useLoading } from "@/hooks/useLoading";
 import { Button, Text } from "react-native-paper";
-import colors from "tailwindcss/colors";
 import Image from "@/components/display/Image";
 import * as SecureStore from "expo-secure-store";
 import { Link, Stack } from "expo-router";
 import { router } from "expo-router"; 
+import { colors } from "@/utils/constants";
+
 
 
 
@@ -71,17 +72,7 @@ const LoginScreen = ({ navigation }: any) => {
       });
   };
 
-  const handleGoogleLogin = async () => {
-    try {
-      Alert.alert("Succès", "Connexion réussie avec Google!");
-    } catch (error) {
-      console.log(error, "erreur lors de la connexion avec Google");
-      Alert.alert(
-        "Erreur",
-        "Échec de la connexion avec Google. Veuillez réessayer plus tard."
-      );
-    }
-  };
+
 
   return (
     <Screen>
@@ -92,7 +83,7 @@ const LoginScreen = ({ navigation }: any) => {
   
           {/* <Text style={styles.title}>Login</Text> */}
           <Image
-            source={require("../../assets/images/logoguide.png")}
+            source={require("../../assets/images/logo.png")}
             style={styles.logo}
           />
 
@@ -206,32 +197,34 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
     marginBottom: 5,
-    color: colors.gray[900], // Couleur sombre pour le contraste
+    color: colors.outline, // Couleur sombre pour le contraste
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 20,
+    fontWeight: "bold",
     textAlign: "center",
-    color: colors.gray[600], // Couleur plus douce pour l'effet pro
-    marginBottom: 25,
-  },
-  
+    color: colors.onBackground,
+    marginBottom: 20,
+    marginTop:20
+  }
+,  
   scrollViewContent: {
     flexGrow: 1,
     justifyContent: "center",
   },
   logo: {
-    width: '50%',
-    height: '35%',
+    width: 150,
+    height: 160,
     alignSelf: "center",
 
   },
   input: {
     marginBottom: 20,
-    backgroundColor:colors.white,
-    borderColor: colors.white[200],
+    backgroundColor: colors.background,
+    // borderColor: colors.white[200],
   },
   errorText: {
-    color: colors.red[500],
+    color: colors.error,
     marginBottom: 10,
     fontSize: 14,
   },
@@ -240,17 +233,17 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   forgotPasswordText: {
-    color: colors.blue[500],
+    color: colors.primary,
     fontSize: 14,
   },
   signInButton: {
-    backgroundColor: colors.orange[500],
+    backgroundColor: colors.primary,
     borderRadius: 10,
     paddingVertical: 6,
     marginBottom: 20,
   },
   signInButtonText: {
-    color: colors.white,
+    color: colors.background,
     fontSize: 16,
     fontWeight: "bold",
   },
@@ -262,25 +255,25 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: colors.gray[300],
+    backgroundColor: colors.outline,
   },
   dividerText: {
     marginHorizontal: 10,
-    color: colors.gray[500],
+    color: colors.outline,
     fontSize: 14,
   },
   googleButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.white,
+    backgroundColor: colors.outline,
     height: 50,
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: colors.gray[300],
-    shadowColor: colors.black,
+    borderColor: colors.outline,
+    shadowColor: colors.onBackground,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 1.5,
@@ -289,7 +282,7 @@ const styles = StyleSheet.create({
   },
   googleButtonText: {
     fontWeight: "bold",
-    color: colors.gray[700],
+    color: colors.outline,
     fontSize: 16,
   },
   signUpContainer: {
@@ -298,11 +291,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   signUpText: {
-    color: colors.gray[500],
+    color: colors.onBackground,
     fontSize: 14,
   },
   signUpLink: {
-    color: colors.blue[500],
+    color: colors.primary,
     marginLeft: 5,
     fontSize: 14,
     fontWeight: "bold",

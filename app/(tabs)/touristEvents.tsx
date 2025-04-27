@@ -17,6 +17,7 @@ import EventCard from "@/components/eventCard";
 import tw from "@/utils/tailwind copy";
 import Header from "@/components/Header copy";
 import utc from "dayjs/plugin/utc";
+import { colors } from "@/utils/constants";
 
 dayjs.extend(utc);
 
@@ -95,7 +96,7 @@ const TouristEvents = () => {
   };
 
   return (
-    <View style={tw`flex-1`}>
+    <View style={[tw`flex-1`, { backgroundColor: colors.background}]}>
       <Header
         showNotificationIcon
         showAvatar
@@ -106,7 +107,7 @@ const TouristEvents = () => {
 
       {loading ? (
         <View style={tw`items-center justify-center flex-1`}>
-          <ActivityIndicator size="large" color="orange" />
+          <ActivityIndicator size="large" color={colors.primary} />
           <Text style={tw`mt-2 text-gray-500`}>Loading events...</Text>
         </View>
       ) : user ? (

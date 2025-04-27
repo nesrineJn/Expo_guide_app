@@ -1,18 +1,19 @@
-import { useNavigation, useTheme } from "@react-navigation/native";
-import React, { useCallback, useEffect, useState } from "react";
+import { useNavigation } from "@react-navigation/native";
+import React, { useCallback } from "react";
 import { StyleSheet, TouchableOpacity, View, Text } from "react-native";
 import { Appbar } from "react-native-paper";
 import Avatar from "./display/Avatar";
 import { scale } from "react-native-size-matters";
 import { Link } from "expo-router";
-import * as SecureStore from "expo-secure-store";
 import { colors } from "@/utils/constants";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export interface HeaderProps {
   showBackButton?: boolean;
   showAvatar?: boolean;
   showNotificationIcon?: boolean;
   showLoginButton?: boolean;
+  showTitle?: boolean; // <-- 🆕 nouveau props
   onBackActionPressed?: () => void;
   onAvatarPressed?: () => void;
   onNotificationPressed?: () => void;
@@ -25,30 +26,15 @@ const Header: React.FC<HeaderProps> = ({
   showAvatar = false,
   showNotificationIcon = false,
   showLoginButton = false,
+  showTitle = false, // <-- 🆕 par défaut false
   onBackActionPressed,
   onAvatarPressed,
   onNotificationPressed,
   title = "",
   grandTitle = "",
 }) => {
-  const { colors } = useTheme();
   const navigation = useNavigation();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userAvatar, setUserAvatar] = useState("");
-
-  useEffect(() => {
-    const checkLoginStatus = async () => {
-      const token = await SecureStore.getItemAsync("token");
-      const avatar = await SecureStore.getItemAsync("avatar");
-      if (token) {
-        setIsLoggedIn(true);
-        setUserAvatar(avatar || "https://i.pravatar.cc/300");
-      } else {
-        setIsLoggedIn(false);
-      }
-    };
-    checkLoginStatus();
-  }, []);
+  const { userData } = useCurrentUser(); 
 
   const onBackActionClicked = useCallback(
     () =>
@@ -58,14 +44,20 @@ const Header: React.FC<HeaderProps> = ({
     [navigation, onBackActionPressed]
   );
 
+  const defaultAvatar = "https://i.pravatar.cc/300";
+
+  // 🆕 extraire prénom si besoin
+  const getFirstName = (fullName: string) => {
+    if (!fullName) return "";
+    return fullName.split(" ")[0]; // premier mot
+  };
+
   return (
-    <Appbar.Header
-      style={[styles.header, { backgroundColor: colors.background }]}
-    >
-      {isLoggedIn && showAvatar && (
+    <Appbar.Header style={[styles.header, { backgroundColor: colors.background }]}>
+      {userData && showAvatar && (
         <TouchableOpacity onPress={onAvatarPressed} style={styles.avatarButton}>
-          {/* @ts-expect-error */}
-          <Avatar user={userAvatar} size={30} />
+        
+          <Avatar user={userData} size={30} />
         </TouchableOpacity>
       )}
 
@@ -74,15 +66,11 @@ const Header: React.FC<HeaderProps> = ({
           onPress={onBackActionClicked}
           style={styles.backButton}
         >
-          <Appbar.Action
-            icon="arrow-left"
-            size={scale(25)}
-            // color={colors.onSurface}
-          />
+          <Appbar.Action icon="arrow-left" size={scale(25)} />
         </TouchableOpacity>
       )}
 
-      {!isLoggedIn && showLoginButton && (
+      {!userData && showLoginButton && (
         <TouchableOpacity style={styles.loginButton}>
           <Link href={`/login`} asChild>
             <Text style={styles.loginText}>Login</Text>
@@ -93,6 +81,10 @@ const Header: React.FC<HeaderProps> = ({
       <View style={styles.titleContainer}>
         {grandTitle ? (
           <Text style={[styles.grandTitle]}>{grandTitle}</Text>
+        ) : showTitle && userData ? (
+          <Text style={styles.bonjourText}>
+            Bonjour, {getFirstName(userData.fullName).toLowerCase()} 👋
+          </Text> // <-- 🆕 Bonjour prénom 👋
         ) : (
           <Text style={[styles.title]}>{title}</Text>
         )}
@@ -144,10 +136,17 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "bold",
+    color: "#000",
   },
   grandTitle: {
     fontSize: 18,
     fontWeight: "bold",
+  },
+  bonjourText: { // <-- 🆕 style pour Bonjour
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#0f172a",
+    textTransform: "capitalize",
   },
   iconButton: {
     marginLeft: 10,

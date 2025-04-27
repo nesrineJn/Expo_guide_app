@@ -45,7 +45,7 @@ const ReservationCard: React.FC<ReservationCardProps> = ({ item }) => {
     <Link href={`/details/${item.offerId._id}`} > 
       <TouchableRipple
         rippleColor="rgba(0, 0, 0, .1)"
-        style={tw`flex-row items-center p-2 mb-3 bg-white border border-gray-200 rounded-lg shadow-md`}
+        style={tw`flex-row items-center p-2 mb-3 bg-white border border-gray-200 rounded-lg shadow-xs`}
       >
         <>
           {/* Image */}

@@ -4,6 +4,7 @@ import { Text } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
 import dayjs from "dayjs";
 import tw from "@/utils/tailwind copy";
+import { colors } from "@/utils/constants";
 
 interface MiniCalendarProps {
   onSelectDates: (dates: string[]) => void; // ✅ Prop pour envoyer les dates filtrées
@@ -66,12 +67,13 @@ console.log("selectedDays",selectedDays)
           const isSelected = selectedDays.includes(item.fullDate);
           return (
             <TouchableOpacity
-              onPress={() => toggleDaySelection(item.fullDate)}
-              style={tw.style(
-                "mx-1 px-3 py-1 rounded-lg items-center",
-                isSelected ? "bg-orange-500" : "bg-gray-200"
-              )}
-            >
+            onPress={() => toggleDaySelection(item.fullDate)}
+            style={tw.style(
+              "mx-1 px-3 py-1 rounded-lg items-center",
+              isSelected ? `bg-[${colors.primary}]` : "bg-gray-200"
+            )}
+          >
+          
               <Text style={tw.style("text-sm", isSelected ? "text-white font-bold" : "text-gray-500")}>
                 {item.weekDay}
               </Text>

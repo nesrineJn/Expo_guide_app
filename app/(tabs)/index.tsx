@@ -9,26 +9,29 @@ import {
   Pressable,
 } from "react-native";
 
-import { HelloWave } from "@/components/HelloWave";
-import ParallaxScrollView from "@/components/ParallaxScrollView";
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
-import { useTheme } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import { Link, useNavigation } from "expo-router";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import axios from "axios";
 import Header from "@/components/Header copy";
 import { colors } from "@/utils/constants";
+;
+import * as SecureStore from "expo-secure-store";
+import PendingReviewModal from "../PendingReviewModal";
+import { MaterialIcons } from "@expo/vector-icons";
+import { ScrollView } from "react-native-gesture-handler";
 
 const fakeUsers = [
   { id: "1", avatar: "https://i.pravatar.cc/300?img=1" },
   { id: "2", avatar: "https://i.pravatar.cc/300?img=2" },
   { id: "3", avatar: "https://i.pravatar.cc/300?img=3" },
 ];
+const fakeGuides = [
+  { id: "1", name: "Ahmed Ben Salah", avatar: "https://i.pravatar.cc/150?img=10", rating: 4.8 },
+  { id: "2", name: "Sarah Mlika", avatar: "https://i.pravatar.cc/150?img=11", rating: 4.7 },
+  { id: "3", name: "Mohamed Kefi", avatar: "https://i.pravatar.cc/150?img=12", rating: 4.9 },
+];
 
 export default function HomeScreen() {
-  const { colors } = useTheme();
+
   interface Offre {
     _id: string;
     photos: string[];
@@ -40,17 +43,36 @@ export default function HomeScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
   const navigation = useNavigation();
+  const [pendingReview, setPendingReview] = useState<any>(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [topGuides, setTopGuides] = useState<any[]>([]);
 
+  console.log(pendingReview)
   useEffect(() => {
-    const fetchOffres = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(true);
-        fetch("http:/192.168.1.16:4000/offres")
-          .then((response) => response.json())
-          .then((json) => {
-            setOffres(json);
-            console.log("offressss", offres);
-          });
+    
+        const offresResponse = await fetch("http://192.168.1.16:4000/offres");
+        const offresData = await offresResponse.json();
+        setOffres(offresData);
+    
+        const idUser = await SecureStore.getItemAsync("currentUser");
+        if (idUser) {
+          const pendingResponse = await fetch(`http://192.168.1.16:4000/reservations/pending-reviews/${idUser}`);
+          const pendingData = await pendingResponse.json();
+          if (pendingData.length > 0) {
+            setPendingReview(pendingData[0]);
+            setShowReviewModal(true);
+          }
+        }
+    
+        // 🔥 Ici on ajoute guides
+        const guidesResponse = await fetch("http://192.168.1.16:4000/users/top-guides");
+        console.log(guidesResponse,'fff')
+        const guidesData = await guidesResponse.json();
+        setTopGuides(guidesData);
+    
       } catch (err) {
         console.error("Erreur API:", err);
         setIsError(true);
@@ -58,13 +80,14 @@ export default function HomeScreen() {
         setIsLoading(false);
       }
     };
-
-    fetchOffres();
+  
+    fetchData();
   }, []);
-
+  
+  
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Header showNotificationIcon showAvatar showLoginButton />
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
+      <Header showNotificationIcon showAvatar showLoginButton  showTitle/>
 
       <View style={styles.banner}>
         <Text style={[styles.bannerText]}>
@@ -94,6 +117,7 @@ export default function HomeScreen() {
           keyExtractor={(item) => item._id}
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.destinationList}
+          
           renderItem={({ item }) => (
             <Link href={`/details/${item._id}`} asChild>
             <TouchableOpacity style={styles.card}>
@@ -147,20 +171,75 @@ export default function HomeScreen() {
           )}
         />
       </View>
+      <View style={styles.section}>
+  <View style={styles.sectionHeader}>
+    <Text style={styles.sectionTitle}>Top Guides</Text>
+    <TouchableOpacity
+      onPress={() => {
+        // Navigation vers la liste complète si besoin
+      }}
+    >
+      <Text style={styles.viewAll}>View all</Text>
+    </TouchableOpacity>
+  </View>
+
+  <FlatList
+  horizontal
+  data={topGuides}
+  keyExtractor={(item) => item._id}
+  showsHorizontalScrollIndicator={false}
+  contentContainerStyle={styles.destinationList}
+  renderItem={({ item }) => (
+    <View style={styles.guideCard}>
+      <Image source={{ uri: item.profileImage }} style={styles.guideImage} />
+      <Text style={styles.guideName}>{item.fullName}</Text>
+      <View style={styles.guideRatingRow}>
+        {/* Afficher les étoiles */}
+        {[...Array(Math.floor(item.ratingAverage || 0))].map((_, index) => (
+          <MaterialIcons
+            key={index}
+            name="star"
+            size={14}
+            color="#facc15"
+          />
+        ))}
+        {/* Afficher la note à côté */}
+        <Text style={styles.guideRatingText}>
+          {item.ratingAverage?.toFixed(1) ?? "0.0"}
+        </Text>
+      </View>
     </View>
+  )}
+/>
+
+</View>
+
+      {pendingReview && (
+  <PendingReviewModal
+    visible={showReviewModal}
+    pendingReview={pendingReview}
+    onClose={() => setShowReviewModal(false)}
+    onSubmitReview={(rating, comment) => {
+      console.log("Envoyer le Review:", rating, comment);
+      setShowReviewModal(false);
+    }}
+  />
+)}
+
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { paddingHorizontal: 4 },
+  container: { paddingHorizontal: 4 , backgroundColor: colors.background },
   loaderContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   errorContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
 
-  banner: { marginVertical: 20, paddingHorizontal: 16 },
-  bannerText: { fontSize: 28, fontWeight: "bold", lineHeight: 34 },
+  banner: { marginVertical: 15, paddingHorizontal: 16 },
+  bannerText: { fontSize: 25, fontWeight: "700", lineHeight: 30 },
   bannerHighlight: { color: colors.primary },
 
-  section: { marginTop: 20 },
+  section: { marginTop: 5 },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -168,7 +247,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 10,
   },
-  sectionTitle: { fontSize: 20, fontWeight: "bold" },
+  sectionTitle: { fontSize: 18, fontWeight: "600" },
   viewAll:{
     color: colors.primary,
     fontWeight: "bold",
@@ -176,22 +255,27 @@ const styles = StyleSheet.create({
 
   }
 ,
-  destinationList: { paddingHorizontal: 16, paddingBottom: 20 },
+destinationList: {
+  paddingHorizontal: 16,
+  paddingBottom: 20, // pas 200 !
+},
+
   card: {
+    
     width: 280,
     marginRight: 16,
     borderRadius: 16,
     overflow: "hidden",
-    backgroundColor: "#FFF",
-    elevation: 5,
+    backgroundColor: "#fff",
+    elevation: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2,
-    shadowRadius: 5,
+    // shadowRadius: 5,
   },
   cardImage: { width: "100%", height: 250 },
   cardContent: { padding: 12 },
-  cardTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 4 },
+  cardTitle: { fontSize: 15, fontWeight: "500", marginBottom: 4 },
   locationRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -227,4 +311,39 @@ const styles = StyleSheet.create({
     fontSize: 14,
     flex: 1,
   },
+  guideCard: {
+    width: 140,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    marginRight: 16,
+    alignItems: "center",
+    padding: 12,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+  },
+  guideImage: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    marginBottom: 10,
+  },
+  guideName: {
+    fontSize: 14,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 6,
+    color: "#1f2937",
+  },
+  guideRatingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  guideRatingText: {
+    marginLeft: 4,
+    fontSize: 12,
+    color: "#6b7280",
+  },
+
 });
