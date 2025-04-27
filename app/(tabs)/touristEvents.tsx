@@ -97,12 +97,14 @@ const TouristEvents = () => {
 
   return (
     <View style={[tw`flex-1`, { backgroundColor: colors.background}]}>
+       <View style={{paddingHorizontal:12}}>
       <Header
         showNotificationIcon
         showAvatar
         showLoginButton
         grandTitle="Tourist Reservations"
       />
+      </View>
       <MiniCalendar onSelectDates={setFilteredDates} />
 
       {loading ? (

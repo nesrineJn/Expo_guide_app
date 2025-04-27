@@ -53,6 +53,8 @@ export default function RootLayout() {
                 <Stack.Screen name="EditProfileScreen" options={{ title: "/edit-profile" }} />
                 <Stack.Screen name="PaymentMethodsScreen" options={{ title: "PaymentMethodsScreen" }} />
                 <Stack.Screen name="AddCardScreen" options={{ title: "AddCardScreen" }} />
+                <Stack.Screen name="NotificationsScreen" options={{ title: "NotificationsScreen" }} />
+
               </Stack>
             </BottomSheetModalProvider>
 

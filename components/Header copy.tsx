@@ -4,19 +4,19 @@ import { StyleSheet, TouchableOpacity, View, Text } from "react-native";
 import { Appbar } from "react-native-paper";
 import Avatar from "./display/Avatar";
 import { scale } from "react-native-size-matters";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router"; // 👈 importer router
 import { colors } from "@/utils/constants";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import NotificationBadge from "./NotificationBadge";
 
 export interface HeaderProps {
   showBackButton?: boolean;
   showAvatar?: boolean;
   showNotificationIcon?: boolean;
   showLoginButton?: boolean;
-  showTitle?: boolean; // <-- 🆕 nouveau props
+  showTitle?: boolean;
   onBackActionPressed?: () => void;
   onAvatarPressed?: () => void;
-  onNotificationPressed?: () => void;
   title?: string;
   grandTitle?: string;
 }
@@ -26,10 +26,9 @@ const Header: React.FC<HeaderProps> = ({
   showAvatar = false,
   showNotificationIcon = false,
   showLoginButton = false,
-  showTitle = false, // <-- 🆕 par défaut false
+  showTitle = false,
   onBackActionPressed,
   onAvatarPressed,
-  onNotificationPressed,
   title = "",
   grandTitle = "",
 }) => {
@@ -46,17 +45,15 @@ const Header: React.FC<HeaderProps> = ({
 
   const defaultAvatar = "https://i.pravatar.cc/300";
 
-  // 🆕 extraire prénom si besoin
   const getFirstName = (fullName: string) => {
     if (!fullName) return "";
-    return fullName.split(" ")[0]; // premier mot
+    return fullName.split(" ")[0];
   };
 
   return (
     <Appbar.Header style={[styles.header, { backgroundColor: colors.background }]}>
       {userData && showAvatar && (
         <TouchableOpacity onPress={onAvatarPressed} style={styles.avatarButton}>
-        
           <Avatar user={userData} size={30} />
         </TouchableOpacity>
       )}
@@ -84,20 +81,23 @@ const Header: React.FC<HeaderProps> = ({
         ) : showTitle && userData ? (
           <Text style={styles.bonjourText}>
             Bonjour, {getFirstName(userData.fullName).toLowerCase()} 👋
-          </Text> // <-- 🆕 Bonjour prénom 👋
+          </Text>
         ) : (
           <Text style={[styles.title]}>{title}</Text>
         )}
       </View>
 
       {showNotificationIcon && (
-        <TouchableOpacity
-          onPress={onNotificationPressed}
-          style={styles.iconButton}
-        >
-          <Appbar.Action icon="bell-outline" size={scale(25)} />
-        </TouchableOpacity>
-      )}
+  <TouchableOpacity
+    onPress={() => router.push("/NotificationsScreen")}
+    style={styles.iconButton}
+  >
+    <View>
+      <Appbar.Action icon="bell-outline" size={scale(25)} />
+      <NotificationBadge unreadCount={5} /> 
+    </View>
+  </TouchableOpacity>
+)}
     </Appbar.Header>
   );
 };
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0,
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 10,
+    paddingHorizontal: 0,
   },
   avatarButton: {
     marginRight: 10,
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
   },
-  bonjourText: { // <-- 🆕 style pour Bonjour
+  bonjourText: {
     fontSize: 18,
     fontWeight: "bold",
     color: "#0f172a",

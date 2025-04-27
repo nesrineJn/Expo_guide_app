@@ -87,8 +87,9 @@ export default function HomeScreen() {
   
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
-      <Header showNotificationIcon showAvatar showLoginButton  showTitle/>
-
+      <View style={{padding:8}}>
+      <Header showNotificationIcon showAvatar showLoginButton  showTitle />
+      </View>
       <View style={styles.banner}>
         <Text style={[styles.bannerText]}>
           Discover Tunisia's Hidden{" "}
