@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { Text } from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
 import Screen from '@/components/screen';
@@ -8,7 +8,7 @@ import Avatar from '@/components/display/Avatar';
 import { scale } from 'react-native-size-matters';
 import { colors } from '@/utils/constants'; 
 import { router } from 'expo-router';
-
+import * as SecureStore from "expo-secure-store";
 const MoreScreen = () => {
   const { userData, isLoading, isError } = useCurrentUser();
   const handleNavigate = (destination: string) => {
@@ -25,7 +25,28 @@ const MoreScreen = () => {
       });
     } else if (destination === 'Payments') {
       router.push("/PaymentMethodsScreen"); 
-    } else {
+    } 
+    else if (destination === 'Logout') {
+      Alert.alert(
+        "Se déconnecter",
+        "Êtes-vous sûr de vouloir vous déconnecter ?",
+        [
+          { text: "Annuler", style: "cancel" },
+          { 
+            text: "Se déconnecter", 
+            style: "destructive", 
+            onPress: async () => {
+              await SecureStore.deleteItemAsync("currentUser");
+              await SecureStore.deleteItemAsync("email");
+              await SecureStore.deleteItemAsync("token");
+              router.replace("/login");
+            }
+          }
+        ]
+      );
+    }
+    
+    else {
       console.log('Navigate to:', destination);
     }
   };
