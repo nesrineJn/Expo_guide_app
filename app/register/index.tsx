@@ -66,7 +66,7 @@ const RegisterScreen = ({ navigation }: any) => {
           <ScrollView contentContainerStyle={styles.scrollViewContent}>
             {/* Logo */}
             <Image
-              source={require("../../assets/images/logo.png")}
+              source={require("../../assets/images/logo1.png")}
               style={styles.logo}
             />
 
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   logo: {
-    width: 150,
+    width: 200,
     height: 160,
     marginBottom: 20,
   },

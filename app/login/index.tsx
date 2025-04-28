@@ -83,7 +83,7 @@ const LoginScreen = ({ navigation }: any) => {
   
           {/* <Text style={styles.title}>Login</Text> */}
           <Image
-            source={require("../../assets/images/logo.png")}
+            source={require("../../assets/images/logo1.png")}
             style={styles.logo}
           />
 
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   logo: {
-    width: 150,
+    width: 200,
     height: 160,
     alignSelf: "center",
 
