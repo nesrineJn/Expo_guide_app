@@ -27,6 +27,12 @@ interface Offre {
   prix: number;
   startDate: string;
   endDate: string;
+  guideReview: string
+  guideInfo:{
+    _id: string,
+    fullName: string
+
+  }
 }
 
 const AllScreen = () => {
@@ -57,7 +63,7 @@ const AllScreen = () => {
       </View>
     );
   }
-
+// console.log(JSON.stringify(offres, null, 2),"**")
   return (
     <View style={styles.container}>
       <FlatList
@@ -99,13 +105,18 @@ const AllScreen = () => {
                   </View>
 
                   <View style={styles.infoRow}>
-                    <MaterialIcons name="person" size={14} color="gray" />
-                    <Text style={styles.dateText}>mohamed</Text>
-                    {[...Array(3)].map((_, index) => (
-                      <MaterialIcons key={index} name="star" size={14} color="#facc15" />
-                    ))}
-                    <Text style={styles.ratingText}>4.5</Text>
-                  </View>
+                      <MaterialIcons name="person" size={14} color="gray" />
+                      <Text style={[styles.dateText, { marginRight: 20 }]}>
+                        {item.guideInfo.fullName ?? "Guide"}
+                      </Text> 
+                      
+                      {[...Array(3)].map((_, index) => (
+                        <MaterialIcons key={index} name="star" size={14} color="#facc15" />
+                      ))}
+                      
+                      <Text style={styles.ratingText}>{item.guideReview}</Text>
+                    </View>
+
 
                   <View style={styles.infoRow}>
                     <View style={styles.avatarsContainer}>

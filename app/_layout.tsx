@@ -51,9 +51,11 @@ export default function RootLayout() {
                 <Stack.Screen name="register" options={{ title: "Register" }} />
                 <Stack.Screen name="GuideProfileScreen" options={{ title: "/guide-profile" }} />
                 <Stack.Screen name="EditProfileScreen" options={{ title: "/edit-profile" }} />
-                <Stack.Screen name="PaymentMethodsScreen" options={{ title: "PaymentMethodsScreen" }} />
-                <Stack.Screen name="AddCardScreen" options={{ title: "AddCardScreen" }} />
-                <Stack.Screen name="NotificationsScreen" options={{ title: "NotificationsScreen" }} />
+                <Stack.Screen name="PaymentMethodsScreen" options={{ title: "Paymen tMethods" }} />
+                <Stack.Screen name="AddCardScreen" options={{ title: "add cart " }} />
+                <Stack.Screen name="NotificationsScreen" options={{ title: "Notifications" }} />
+                <Stack.Screen name="TopGuidesListScreen" options={{ title: "Top Guides List" }} />
+
 
               </Stack>
             </BottomSheetModalProvider>

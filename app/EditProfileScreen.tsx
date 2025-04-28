@@ -9,6 +9,9 @@ import { scale } from 'react-native-size-matters';
 import { colors } from '@/utils/constants';
 import { router } from 'expo-router';
 import Input from '@/components/Input';
+import * as SecureStore from "expo-secure-store";
+import { useLoading } from '@/hooks/useLoading';
+
 
 type FormValues = {
   fullName: string;
@@ -20,6 +23,7 @@ type FormValues = {
 export default function EditProfileScreen() {
   const navigation = useNavigation();
   const { userData } = useCurrentUser();
+  const { isLoading, startLoading, stopLoading } = useLoading();
 
 
   useLayoutEffect(() => {
@@ -31,17 +35,53 @@ export default function EditProfileScreen() {
 
   const { control, handleSubmit } = useForm<FormValues>({
     defaultValues: {
-      fullName: params.fullName as string || '',
-      email: params.email as string || '',
-      phone: params.phone as string || '',
-      nationality: params.nationality as string || '',
+      fullName: (params.fullName as string) || userData?.fullName || '',
+      email: (params.email as string) || userData?.email || '',
+      phone: (params.phone as string) || userData?.phoneNumber || '',   
+      nationality: (params.nationality as string) || userData?.nationality || '',
     },
   });
-
-  const onSubmit = (data: FormValues) => {
-    console.log('Updated data:', data);
-    router.back(); 
+  
+  
+  
+  const onSubmit = async (data: FormValues) => {
+    try {
+      startLoading();
+      // console.log('Updated data:', data);
+  
+      const currentUser = await SecureStore.getItemAsync("currentUser");
+      if (!currentUser) {
+        throw new Error("Utilisateur non trouvé");
+      }
+  
+      const response = await fetch(`http://192.168.1.16:4000/users/${currentUser}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fullName: data.fullName,
+          email: data.email,
+          phoneNumber: data.phone,
+          nationality: data.nationality,
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error("Erreur lors de la mise à jour du profil");
+      }
+  
+      // console.log('Profil mis à jour avec succès');
+  
+      // Rediriger seulement après succès
+      router.replace('/(tabs)');
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour :", error);
+    } finally {
+      stopLoading();
+    }
   };
+  
 
   
   return (

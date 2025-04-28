@@ -18,7 +18,7 @@ const MoreScreen = () => {
         params: {
           fullName: userData?.fullName || '',
           email: userData?.email || '',
-          phone: userData?.phone || '',
+          phone: userData?.phoneNumber || '',
           nationality: userData?.nationality || '',
           profileImage: userData?.profileImage || '',
         },
@@ -50,7 +50,7 @@ const MoreScreen = () => {
       </Screen>
     );
   }
-console.log(userData)
+// console.log(userData)
   return (
     <Screen>
       <ScrollView contentContainerStyle={styles.container}>

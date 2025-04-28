@@ -10,7 +10,7 @@ import {
 } from "react-native";
 
 import { useEffect, useState } from "react";
-import { Link, useNavigation } from "expo-router";
+import { Link, router, useNavigation } from "expo-router";
 import Header from "@/components/Header copy";
 import { colors } from "@/utils/constants";
 ;
@@ -47,7 +47,7 @@ export default function HomeScreen() {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [topGuides, setTopGuides] = useState<any[]>([]);
 
-  console.log(pendingReview)
+  // console.log(pendingReview)
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -66,11 +66,11 @@ export default function HomeScreen() {
             setShowReviewModal(true);
           }
         }
-    
-        // 🔥 Ici on ajoute guides
+ 
         const guidesResponse = await fetch("http://192.168.1.16:4000/users/top-guides");
-        console.log(guidesResponse,'fff')
+   
         const guidesData = await guidesResponse.json();
+   
         setTopGuides(guidesData);
     
       } catch (err) {
@@ -176,9 +176,8 @@ export default function HomeScreen() {
   <View style={styles.sectionHeader}>
     <Text style={styles.sectionTitle}>Top Guides</Text>
     <TouchableOpacity
-      onPress={() => {
-        // Navigation vers la liste complète si besoin
-      }}
+   onPress={() => router.push("/TopGuidesListScreen")}
+
     >
       <Text style={styles.viewAll}>View all</Text>
     </TouchableOpacity>
@@ -191,7 +190,7 @@ export default function HomeScreen() {
   showsHorizontalScrollIndicator={false}
   contentContainerStyle={styles.destinationList}
   renderItem={({ item }) => (
-    <View style={styles.guideCard}>
+    <TouchableOpacity style={styles.guideCard}   onPress={() => router.push({ pathname: "/GuideProfileScreen", params: { id: item._id } })}>
       <Image source={{ uri: item.profileImage }} style={styles.guideImage} />
       <Text style={styles.guideName}>{item.fullName}</Text>
       <View style={styles.guideRatingRow}>
@@ -209,7 +208,7 @@ export default function HomeScreen() {
           {item.ratingAverage?.toFixed(1) ?? "0.0"}
         </Text>
       </View>
-    </View>
+    </TouchableOpacity>
   )}
 />
 

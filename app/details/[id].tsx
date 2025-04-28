@@ -34,6 +34,10 @@ import { tr } from "date-fns/locale";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import PaymentRequiredModal from "../PaymentRequiredModal";
 import { showMessage } from "react-native-flash-message";
+import RenderHTML from "react-native-render-html";
+
+import { useWindowDimensions } from "react-native";
+
 const Details = () => {
   const navigation = useNavigation();
   const route = useRoute();
@@ -50,6 +54,7 @@ const Details = () => {
       email: string;
       profileImage: string;
     };
+    guideReview: string;
   }
 
   const [offer, setOffer] = useState<Offer | null>(null);
@@ -69,6 +74,30 @@ const Details = () => {
   }
 
   const [reservation, setReservation] = useState<Reservation | null>(null);
+  const { width } = useWindowDimensions();
+  const [address, setAddress] = useState<string | null>(null);
+
+  const fetchAddress = async (latitude: number, longitude: number) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`,
+        {
+          headers: {
+            "User-Agent": "YourAppNameHere/1.0", // ✨ ajoute un nom d'app ici
+            "Accept-Language": "fr", // facultatif si tu veux que l'adresse soit en français
+          },
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Erreur lors de la récupération de l'adresse");
+      }
+      const data = await response.json();
+      setAddress(data.display_name);
+    } catch (error) {
+      console.error("Erreur de géocodage inverse :", error);
+    }
+  };
+
   useEffect(() => {
     navigation.setOptions({ title: "Détails de l'offre" });
 
@@ -86,6 +115,9 @@ const Details = () => {
           })
           .then((json) => {
             setOffer(json);
+            if (json.location && Array.isArray(json.location)) {
+              fetchAddress(json.location[0], json.location[1]);
+            }
           });
       } catch (error) {
         console.error("Erreur lors du chargement des détails:", error);
@@ -149,8 +181,8 @@ const Details = () => {
   } | null>(null);
 
   const { userData, isLoading: isUserLoading } = useCurrentUser();
-  const hasCart = userData?.hasCart
-  console.log(userData?.hasCart)
+  const hasCart = userData?.hasCart;
+  console.log(userData?.hasCart);
   // const hasCard = false;
 
   const closeModal = async () => {
@@ -184,19 +216,20 @@ const Details = () => {
         setReservation(json);
         showMessage({
           message: "Réservation en attente ⏳",
-          description: "Votre réservation est en attente de confirmation du guide. 🤝",
-          type: "warning", 
-          duration: 4000, 
+          description:
+            "Votre réservation est en attente de confirmation du guide. 🤝",
+          type: "warning",
+          duration: 4000,
         });
       } catch (error: any) {
         console.error("Erreur de réservation:", error);
-      
+
         const message = error.message?.toLowerCase();
         const isPlacesError =
           message?.includes("number of persons exceeds") ||
           message?.includes("maximum limit") ||
           message?.includes("place");
-      
+
         showMessage({
           message: "Erreur ❗",
           description: isPlacesError
@@ -207,7 +240,7 @@ const Details = () => {
         });
       }
     } else {
-      setIsPaymentModalVisible(true); 
+      setIsPaymentModalVisible(true);
       setPendingReservation({
         touristId: idUser,
         offerId: id,
@@ -240,7 +273,7 @@ const Details = () => {
 
   const updateReservation = async () => {
     if (!reservation) return;
-  
+
     try {
       const response = await fetch(
         `http:/192.168.1.16:4000/reservations/${reservation._id}`,
@@ -250,29 +283,27 @@ const Details = () => {
           body: JSON.stringify({ numberOfPersons: numPlaces }),
         }
       );
-  
+
       if (!response.ok) throw new Error("Error updating reservation.");
-  
+
       console.log("Reservation updated successfully!");
       setIsModalVisible(false);
-  
-      // ➡️ Nouveau flash message pour update réussi
+
       showMessage({
         message: "Réservation mise à jour ✅",
         description: "Le nombre de places a été modifié avec succès.",
         type: "success",
         duration: 4000,
       });
-  
     } catch (error: any) {
       console.error("Update failed:", error);
-    
+
       const message = error.message?.toLowerCase();
       const isPlacesError =
         message?.includes("number of persons exceeds") ||
         message?.includes("maximum limit") ||
         message?.includes("place");
-    
+
       showMessage({
         message: "Erreur ❗",
         description: isPlacesError
@@ -282,11 +313,10 @@ const Details = () => {
         duration: 4000,
       });
     }
-    
   };
   const handleCancelReservation = () => {
     if (!reservation) return;
-  
+
     Alert.alert(
       "Cancel Reservation",
       "Are you sure you want to cancel this reservation? This action cannot be undone.",
@@ -304,19 +334,18 @@ const Details = () => {
                   headers: { "Content-Type": "application/json" },
                 }
               );
-  
+
               if (!response.ok) throw new Error("Error canceling reservation.");
-  
+
               console.log("Reservation canceled successfully!");
               setReservation(null);
-  
+
               showMessage({
                 message: "Réservation annulée ❌",
                 description: "Votre réservation a été annulée avec succès.",
                 type: "danger",
                 duration: 4000,
               });
-  
             } catch (error) {
               console.error("Cancel failed:", error);
             }
@@ -325,7 +354,6 @@ const Details = () => {
       ]
     );
   };
-  
 
   if (isError || !offer) {
     return (
@@ -334,7 +362,7 @@ const Details = () => {
       </View>
     );
   }
-  // console.log(JSON.stringify(offer, null, 2))
+  console.log(JSON.stringify(offer, null, 2));
 
   return (
     <>
@@ -353,6 +381,7 @@ const Details = () => {
         </TouchableOpacity>
 
         <View style={styles.detailsContainer}>
+          <Text style={styles.title}>{offer.titre}</Text>
           <TouchableOpacity
             style={styles.guideContainer}
             onPress={() =>
@@ -371,26 +400,62 @@ const Details = () => {
               source={{ uri: offer.guideId.profileImage || "" }}
               style={styles.avatar}
             />
-            <View style={styles.guideInfo || ""}>
-              <Text style={styles.guideName}>
-                {offer.guideId.fullName || ""}
-              </Text>
+            <View style={styles.guideInfo}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Text style={styles.guideName}>
+                  {offer.guideId.fullName || ""}
+                </Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginRight: 15,
+                  }}
+                >
+                  <MaterialIcons
+                    name="star"
+                    size={16}
+                    color="gold"
+                    style={{ marginRight: 2 }}
+                  />
+                  <Text style={styles.ratingText}>{offer.guideReview || "N/N"}</Text>
+                </View>
+              </View>
               <Text style={styles.guideEmail}>{offer.guideId.email || ""}</Text>
             </View>
           </TouchableOpacity>
-          <Text style={styles.title}>{offer.titre}</Text>
-
-          <Text style={styles.location}>
-            <MaterialIcons name="location-on" size={14} color="gray" /> Tunisia,
-            Sidi Bou Said
-          </Text>
 
           <View style={styles.infoRow}>
-            <MaterialIcons name="star" size={14} color="gold" />
-            <Text style={styles.ratingText}>4.5 (2498 avis)</Text>
+            <Text style={styles.label}>Prix: </Text>
             <Text style={styles.price}>{offer.prix} TND/Personne</Text>
           </View>
-
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              flexWrap: "wrap",
+            }}
+          >
+            <MaterialIcons
+              name="location-on"
+              size={14}
+              color="gray"
+              style={{ marginRight: 4 }}
+            />
+            <Text
+              style={styles.location}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {address || "Chargement..."}
+            </Text>
+          </View>
           <FlatList
             data={offer.photos}
             keyExtractor={(item, index) => index.toString()}
@@ -410,9 +475,13 @@ const Details = () => {
           />
 
           <Text style={styles.sectionTitle}>Description</Text>
-          <Text style={styles.description}>
-            {offer.description.replace(/<[^>]*>/g, "")}
-          </Text>
+          <View style={{ marginTop: 5 }}>
+            <RenderHTML
+              contentWidth={width}
+              source={{ html: offer.description }}
+              baseStyle={styles.description}
+            />
+          </View>
         </View>
 
         {/* <TouchableOpacity style={styles.bookButton} onPress={handleReservation}>
@@ -626,7 +695,7 @@ const styles = StyleSheet.create({
   infoRow: { flexDirection: "row", alignItems: "center", marginVertical: 10 },
   ratingText: { marginLeft: 5, color: "gray" },
   price: {
-    marginLeft: "auto",
+    marginLeft: 3,
     backgroundColor: colors.primaryContainer,
     padding: 4,
     borderRadius: 10,
@@ -731,12 +800,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingBottom: 12,
+    paddingTop: 12,
     paddingHorizontal: 0,
-    // borderTopWidth: 0.5,
+    borderTopWidth: 0.5,
     borderBottomWidth: 0.5,
     borderColor: "lightgray",
     marginBottom: 10,
     backgroundColor: "#fff",
+    marginTop: 15,
   },
   avatar: {
     width: 50,

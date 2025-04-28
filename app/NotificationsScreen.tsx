@@ -37,7 +37,7 @@ const NotificationsScreen = () => {
   const [isLoading, setIsLoading] = useState(true);
 const currentUser= useCurrentUser();
 const userId = currentUser.userData?._id;
-console.log(userId)
+// console.log(userId)
 //   const userId =" userData._id"; 
 
 
@@ -55,7 +55,7 @@ console.log(userId)
 
       if (res.status === 201 || res.status === 200) {
         const dataJson = await res.json();
-        console.log(dataJson)
+        // console.log(dataJson)
         const data = dataJson.map((notif: any) => ({
           id: notif._id,
           title: notif.title,
@@ -109,7 +109,7 @@ console.log(userId)
       const res = await fetch(`http://192.168.1.16:4000/notifs/${id}`, {
         method: "DELETE",
       });
-      console.log(res)
+    //   console.log(res)
 
       if (res.ok) {
         setNotifications((prev) => prev.filter((notif) => notif.id !== id));

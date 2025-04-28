@@ -27,7 +27,7 @@ const GuideProfileScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const { id } = route.params as { id: string };
-
+// console.log(id)
   const [userData, setUserData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("Personal");
